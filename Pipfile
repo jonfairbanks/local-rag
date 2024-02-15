@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+streamlit = "*"
+ollama = "*"
+llama-index = "*"
+llama-index-llms-ollama = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
