@@ -1,10 +1,22 @@
 # Local RAG
 
+![local-rag-logo](logo.png)
+
 📚 Offline, Open-Source RAG
 
 Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
 
-### To Do:
+### Pre-Requisites
+
+- A pre-existing Ollama instance
+- Python 3.9+
+
+### Getting Started
+
+- `pip install pipenv && pipenv install`
+- `pipenv shell && streamlit run main.py`
+
+### To Do
 - [x] Refactor
 - [ ] Migrate chat stream to llama-index
 - [ ] Function to handle file type conversions
