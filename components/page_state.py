@@ -1,6 +1,6 @@
 import streamlit as st
 
-def setup_initial_state():
+def set_initial_state():
     if 'ollama_endpoint' not in st.session_state:
         st.session_state['ollama_endpoint'] = None
 
