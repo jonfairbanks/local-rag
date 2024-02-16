@@ -19,17 +19,25 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 ### To Do
 - [x] Refactor
 - [x] Migrate chat stream to llama-index
-- [ ] Implement llama-index Chat Engine with memory
-- [ ] Function to handle file type conversions
+- [x] Implement llama-index Chat Engine with memory
+- [ ] Swap to llama-index Chat Engine
+- [x] Function to handle file embeddings
 - [ ] Function to handle GitHub repo ingestion
-- [ ] Show Loaders in UI (file uploads, conversions, ...)
+- [x] Show Loaders in UI (file uploads, conversions, ...)
 - [ ] Show Stats in UI (request time, etc.)
 - [ ] Export Data (uploaded files, chat history, ...)
-- [ ] View and Manage Imported Files
-- [ ] About Tab in Sidebar
+- [x] View and Manage Imported Files
+- [x] About Tab in Sidebar
 - [ ] Docker Support
+- [ ] Implement Log Library
+- [ ] Cookies/Local-Storage for State
+- [ ] Ability to Remove Files from Index
+- [ ] Allow Switching of Embedding Model
 
 ### Resources
+- [Ollama](https://ollama.com/)
+- [Llama-Index](https://docs.llamaindex.ai/en/stable/index.html)
+- [Streamlit](https://docs.streamlit.io/library/api-reference)
 - [Ollama w/ Llama-Index](https://docs.llamaindex.ai/en/stable/examples/llm/ollama.html)
 - [RAG w/ Llama-Index](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)
 - [Llama-Index Chat Engine](https://docs.llamaindex.ai/en/stable/examples/chat_engine/chat_engine_context.html)
