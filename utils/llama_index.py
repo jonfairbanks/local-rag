@@ -68,3 +68,15 @@ def load_documents(data_dir: str, service_context):
     except Exception as err:
         print(f"Error creating data index: {err}")
         return None
+    
+
+def create_query_engine(documents, service_context):
+    index = VectorStoreIndex.from_documents(
+        documents, 
+        service_context=service_context,
+        show_progress=True
+    )
+
+    query_engine = index.as_query_engine()
+
+    return query_engine
