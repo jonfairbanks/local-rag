@@ -1,8 +1,8 @@
-# Local RAG
+# 📚 Local RAG
 
 ![local-rag-logo](logo.png)
 
-📚 Offline, Open-Source RAG
+Offline, Open-Source RAG
 
 Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
 
@@ -24,9 +24,12 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 - [ ] Function to handle GitHub repo ingestion
 - [ ] Show Loaders in UI (file uploads, conversions, ...)
 - [ ] Show Stats in UI (request time, etc.)
+- [ ] Export Data (uploaded files, chat history, ...)
 - [ ] View and Manage Imported Files
 - [ ] About Tab in Sidebar
+- [ ] Docker Support
 
 ### Resources
-- [Ollama w/ llama-index](https://docs.llamaindex.ai/en/stable/examples/llm/ollama.html)
-- [RAG w/ llama-index](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)
+- [Ollama w/ Llama-Index](https://docs.llamaindex.ai/en/stable/examples/llm/ollama.html)
+- [RAG w/ Llama-Index](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)
+- [Llama-Index Chat Engine](https://docs.llamaindex.ai/en/stable/examples/chat_engine/chat_engine_context.html)
