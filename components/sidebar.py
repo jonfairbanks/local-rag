@@ -58,26 +58,36 @@ def sidebar():
 
                     st.caption("Loading Embedding Model...")
                     # Create llama-index service-context to use local LLMs and embeddings
-                    with st.spinner('One moment, preparing embedding model...'):
-                        try:
-                            llm = ollama.create_ollama_llm(st.session_state.selected_model, st.session_state.ollama_endpoint)
-                            service_context = llama_index.create_service_context(llm)
-                            #st.success(f"Embedding model is loaded!", icon= "😎")
-                        except Exception as err:
-                            print(f"Setting up Service Context failed: {err}")
-                            #st.error("Error setting up the embedding model", icon="😔")
+                    #with st.spinner('One moment, preparing embedding model...'):
+                    try:
+                        llm = ollama.create_ollama_llm(st.session_state.selected_model, st.session_state.ollama_endpoint)
+                        service_context = llama_index.create_service_context(llm)
+                    except Exception as err:
+                        print(f"Setting up Service Context failed: {err}")
+                        #st.error("Error setting up the embedding model", icon="😔")
 
                     st.caption("Processing File Data...")
+                    #with st.spinner('Processing your documents...'):
+                    try:
+                        documents = llama_index.load_documents(save_dir, service_context)
+                        st.session_state['documents'] = documents
+                    except Exception as err:
+                        print(f"Document Load Error: {err}")
+                        #st.error("Error processing your documents", icon="😔")
+
+                    st.caption("Creating File Index...")
                     with st.spinner('Processing your documents...'):
                         try:
-                            documents = llama_index.load_documents(save_dir, service_context)
-                            st.session_state['documents'] = documents
-                            #st.success(f"File import finished!", icon= "😎")
+                            index = llama_index.create_query_engine(documents, service_context)
+                            query_engine = index.as_query_engine(
+                                similarity_top_k=5, # Return additional results
+                                service_context=service_context
+                            ) 
+                            st.session_state['query_engine'] = query_engine
                         except Exception as err:
-                            print(f"Document Load Error: {err}")
-                            #st.error("Error processing your documents", icon="😔")
+                            print(f"Index Creation Error: {err}")
 
-                    status.update(label="Your files are ready!", state="complete", expanded=False)
+                    status.update(label="Your files are ready. Let's chat!", state="complete", expanded=False)
 
         ###################################
         #
