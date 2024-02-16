@@ -1,26 +1,20 @@
-import ollama
 import streamlit as st
 
-def create_ollama_client(host: str):
-    client = ollama.Client(host=host)
-    return client
-
-def ollama_chat(prompt: str):
-    stream = ollama.chat(
-        model = st.session_state.selected_model,
-        messages = [
-            {
-                'role': 'user', 
-                'content': prompt
-            }
-        ],
-        stream=True,
-    )
-    return stream
+###################################
+#
+# Process Local File
+#
+###################################
 
 def process_local_file(file: str):
     print(file)
     return
+
+###################################
+#
+# Process GitHub Repo
+#
+###################################
 
 def process_github_repo(repo: str):
     print(repo) # Doesn't work?
