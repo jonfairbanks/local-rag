@@ -1,3 +1,6 @@
+import datetime
+import time
+
 import utils.helpers as func
 import utils.ollama as ollama
 
@@ -5,11 +8,11 @@ import streamlit as st
 
 def sidebar():
     with st.sidebar:
-        tab1, tab2, tab3 = st.sidebar.tabs(["File Upload", "GitHub Repo", "Settings"])
+        tab1, tab2, tab3, tab4 = st.sidebar.tabs(["File Upload", "GitHub Repo", "Settings", "About"])
 
         with tab1:
             st.header("Directly import local files")
-            st.caption("Convert local files to embeddings for utilization during chat")
+            st.caption("Convert your local files to embeddings for utilization during chat")
             uploaded_files = st.file_uploader(
                 'Select Files', 
                 accept_multiple_files=True,
@@ -34,9 +37,11 @@ def sidebar():
                 # )
             )
             if len(uploaded_files) > 0:
-                #print(f"File List: {uploaded_files}")
                 st.session_state['file_list'] = uploaded_files
                 for uploaded_file in uploaded_files:
+                    with st.spinner('Processing...'):
+                        time.sleep(5)
+                        func.process_local_file(uploaded_file)
                     st.write("Filename:", uploaded_file.name)
 
         with tab2:
@@ -81,3 +86,28 @@ def sidebar():
                 )
             st.subheader("Current State")
             st.write(st.session_state)
+        
+        with tab4:
+            st.title("📚 Local RAG")
+            st.caption(f"Developed by Jon Fairbanks &copy; {datetime.datetime.now().year}")
+            st.write("")
+            
+            st.subheader("Links")
+            st.markdown("""
+                * [GitHub](https://github.com/jonfairbanks/local-rag)
+                * [Docker Hub](#)
+            """)
+
+            st.subheader("Resources")
+            st.markdown("""
+                * [What is RAG?](https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/)
+                * [Ollama](https://ollama.com/)
+                * [Llama-Index](https://docs.llamaindex.ai/en/stable/index.html)
+                * [Streamlit](https://docs.streamlit.io/library/api-reference)
+            """)
+
+            st.subheader("Help")
+            st.markdown("""
+                * [Bug Reports](https://github.com/jonfairbanks/local-rag/issues)
+                * [Feature Requests](https://github.com/jonfairbanks/local-rag/discussions/new?category=ideas)
+            """)
