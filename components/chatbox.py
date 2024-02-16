@@ -16,13 +16,14 @@ def chatbox():
 
         # Generate llama-index stream with user input 
         with st.chat_message("assistant"):
-            response = st.write_stream(
-                chat(
-                    prompt=prompt,
-                    model=st.session_state.selected_model, 
-                    base_url=st.session_state.ollama_endpoint
+            with st.spinner('Processing...'):
+                response = st.write_stream(
+                    chat(
+                        prompt=prompt,
+                        model=st.session_state.selected_model, 
+                        base_url=st.session_state.ollama_endpoint
+                    )
                 )
-            )
         
         # Add the final response to messages state
         st.session_state.messages.append(
