@@ -44,7 +44,7 @@ def sidebar():
             st.caption("Convert a GitHub repo to embeddings for utilization during chat")
             st.text_input(
                 'GitHub repo', 
-                placeholder="jonfairbanks/notebooks",
+                placeholder="jonfairbanks/local-rag",
                 key="github_repo",
                 value=st.session_state.github_repo,
                 on_change=func.process_github_repo,
@@ -62,7 +62,7 @@ def sidebar():
             st.text_input(
                 'Ollama Endpoint',
                 key="ollama_endpoint",
-                placeholder="http://localhost:11434/api",
+                placeholder="http://localhost:11434",
                 value=st.session_state.ollama_endpoint,
                 on_change=ollama.get_models,
                 #args=(st.session_state.ollama_endpoint, )
