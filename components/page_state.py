@@ -2,7 +2,7 @@ import streamlit as st
 
 def set_initial_state():
     if 'ollama_endpoint' not in st.session_state:
-        st.session_state['ollama_endpoint'] = None
+        st.session_state['ollama_endpoint'] = 'http://localhost:11434' # Revert to None
 
     if 'embedding_model' not in st.session_state:
         st.session_state['embedding_model'] = None
@@ -18,6 +18,9 @@ def set_initial_state():
 
     if 'file_list' not in st.session_state:
         st.session_state['file_list'] = []
+
+    if 'data_index' not in st.session_state:
+        st.session_state['data_index'] = None
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{

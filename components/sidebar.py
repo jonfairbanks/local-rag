@@ -1,8 +1,9 @@
 import datetime
-import time
+import os
 
 import utils.helpers as func
 import utils.ollama as ollama
+import utils.llama_index as llama_index
 
 import streamlit as st
 
@@ -10,9 +11,17 @@ def sidebar():
     with st.sidebar:
         tab1, tab2, tab3, tab4 = st.sidebar.tabs(["File Upload", "GitHub Repo", "Settings", "About"])
 
+        ###################################
+        #
+        # File Upload
+        #
+        ###################################
+        
         with tab1:
             st.header("Directly import local files")
             st.caption("Convert your local files to embeddings for utilization during chat")
+            st.write("")
+
             uploaded_files = st.file_uploader(
                 'Select Files', 
                 accept_multiple_files=True,
@@ -38,15 +47,49 @@ def sidebar():
             )
             if len(uploaded_files) > 0:
                 st.session_state['file_list'] = uploaded_files
-                for uploaded_file in uploaded_files:
-                    with st.spinner('Processing...'):
-                        time.sleep(5)
-                        func.process_local_file(uploaded_file)
-                    st.write("Filename:", uploaded_file.name)
 
+                with st.status("Preparing data...", expanded=True) as status:
+                    st.caption("Uploading Files Locally...")
+                    # Save the files to disk
+                    for uploaded_file in uploaded_files:
+                        with st.spinner(f"Processing {uploaded_file.name}..."):
+                            save_dir = os.getcwd() + "/data"
+                            func.save_uploaded_file(uploaded_file, save_dir)
+
+                    st.caption("Loading Embedding Model...")
+                    # Create llama-index service-context to use local LLMs and embeddings
+                    with st.spinner('One moment, preparing embedding model...'):
+                        try:
+                            llm = ollama.create_ollama_llm(st.session_state.selected_model, st.session_state.ollama_endpoint)
+                            service_context = llama_index.create_service_context(llm)
+                            #st.success(f"Embedding model is loaded!", icon= "😎")
+                        except Exception as err:
+                            print(f"Setting up Service Context failed: {err}")
+                            #st.error("Error setting up the embedding model", icon="😔")
+
+                    st.caption("Processing File Data...")
+                    with st.spinner('Processing your documents...'):
+                        try:
+                            documents = llama_index.load_documents(save_dir, service_context)
+                            st.session_state['documents'] = documents
+                            #st.success(f"File import finished!", icon= "😎")
+                        except Exception as err:
+                            print(f"Document Load Error: {err}")
+                            #st.error("Error processing your documents", icon="😔")
+
+                    status.update(label="Your files are ready!", state="complete", expanded=False)
+
+        ###################################
+        #
+        # GitHub Repo
+        #
+        ###################################
+                        
         with tab2:
             st.header("Import files from a GitHub repo")
             st.caption("Convert a GitHub repo to embeddings for utilization during chat")
+            st.write("")
+
             st.text_input(
                 'GitHub repo', 
                 placeholder="jonfairbanks/local-rag",
@@ -58,12 +101,22 @@ def sidebar():
             st.button(
                 "Process Repo",
                 on_click=func.process_github_repo,
-                args=(st.session_state.github_repo, )          
+                args=(st.session_state.github_repo, ),
+                disabled=True        
             )
 
+        ###################################
+        #
+        # Settings
+        #
+        ###################################
+            
         with tab3:
             st.header("Settings")
             st.caption("Configure Local RAG settings and integrations")
+            st.write("")
+
+            st.subheader("Chat")
             st.text_input(
                 'Ollama Endpoint',
                 key="ollama_endpoint",
@@ -72,9 +125,8 @@ def sidebar():
                 on_change=ollama.get_models,
                 #args=(st.session_state.ollama_endpoint, )
             )
-            st.selectbox('Embedding Model', ["Default"])
             st.selectbox(
-                'Chat Model', 
+                'Model', 
                 st.session_state.ollama_models,
                 key="selected_model"
             )
@@ -84,8 +136,20 @@ def sidebar():
                     on_click=ollama.get_models,
                     #args=(st.session_state.ollama_endpoint, )
                 )
+            st.write("")
+            
+            st.subheader("Embeddings")
+            st.selectbox('Model', ["Default (bge-large-en)"], disabled=True)
+            st.write("")
+            
             st.subheader("Current State")
             st.write(st.session_state)
+        
+        ###################################
+        #
+        # About
+        #
+        ###################################
         
         with tab4:
             st.title("📚 Local RAG")
@@ -101,9 +165,7 @@ def sidebar():
             st.subheader("Resources")
             st.markdown("""
                 * [What is RAG?](https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/)
-                * [Ollama](https://ollama.com/)
-                * [Llama-Index](https://docs.llamaindex.ai/en/stable/index.html)
-                * [Streamlit](https://docs.streamlit.io/library/api-reference)
+                * [What are embeddings?](https://aws.amazon.com/what-is/embeddings-in-machine-learning/)
             """)
 
             st.subheader("Help")
