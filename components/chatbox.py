@@ -1,16 +1,6 @@
-import ollama
 import streamlit as st
 
-from typing import Dict, Generator
-
-def ollama_generator(model_name: str, messages: Dict) -> Generator:
-    stream = ollama.chat(
-        model=model_name, 
-        messages=messages, 
-        stream=True
-    )
-    for chunk in stream:
-        yield chunk['message']['content']
+from utils.ollama import chat, context_chat
 
 def chatbox():
     if prompt := st.chat_input("How can I help?"):
@@ -24,12 +14,13 @@ def chatbox():
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate Ollama stream with user input 
+        # Generate llama-index stream with user input 
         with st.chat_message("assistant"):
             response = st.write_stream(
-                ollama_generator(
-                    st.session_state.selected_model, 
-                    st.session_state.messages
+                chat(
+                    prompt=prompt,
+                    model=st.session_state.selected_model, 
+                    base_url=st.session_state.ollama_endpoint
                 )
             )
         
