@@ -24,7 +24,6 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 - [x] Function to handle file embeddings
 - [ ] Function to handle GitHub repo ingestion
 - [x] Show Loaders in UI (file uploads, conversions, ...)
-- [ ] Show Stats in UI (request time, etc.)
 - [ ] Export Data (uploaded files, chat history, ...)
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar
