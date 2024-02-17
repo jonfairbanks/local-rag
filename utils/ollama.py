@@ -56,13 +56,29 @@ def get_models():
 #
 ###################################
 
-def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60):
-    llm = Ollama(
-        model=model,
-        base_url=base_url,
-        request_timeout=request_timeout
-    )
-    return llm 
+def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> Ollama:
+    """
+    Create an instance of the Ollama language model.
+
+    Parameters:
+        model (str): The name of the model to use for language processing.
+        base_url (str): The base URL for making API requests.
+        request_timeout (int, optional): The timeout for API requests in seconds. Defaults to 60.
+
+    Returns:
+        Ollama: An instance of the Ollama language model with the specified configuration.
+    """
+    try:
+        llm = Ollama(
+            model=model,
+            base_url=base_url,
+            request_timeout=request_timeout
+        )
+    except Exception as e:
+        print(f"Error creating Ollama language model: {e}")
+        return None
+    else:
+        return llm
 
 ###################################
 #
@@ -94,7 +110,7 @@ def chat(prompt: str, model: str, base_url: str, request_timeout: int = 60):
             yield chunk.delta
     except Exception as err:
         print(f"Ollama chat stream error: {err}")
-        return None
+        return
 
 ###################################
 #
@@ -139,4 +155,5 @@ def context_chat(
             yield chunk.delta
     except Exception as err:
         print(f"Ollama chat stream error: {err}")
-        return None
+        return
+
