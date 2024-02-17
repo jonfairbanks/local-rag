@@ -14,7 +14,7 @@ set_page_header()
 ### Setup Initial State
 set_initial_state()
 
-for msg in st.session_state['messages']:
+for msg in st.session_state["messages"]:
     st.chat_message(msg["role"]).write(msg["content"])
 
 ### Sidebar

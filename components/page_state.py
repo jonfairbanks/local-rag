@@ -1,29 +1,32 @@
 import streamlit as st
 
+
 def set_initial_state():
-    if 'ollama_endpoint' not in st.session_state:
-        st.session_state['ollama_endpoint'] = 'http://localhost:11434' # Revert to None
+    if "ollama_endpoint" not in st.session_state:
+        st.session_state["ollama_endpoint"] = "http://localhost:11434"  # Revert to None
 
-    if 'embedding_model' not in st.session_state:
-        st.session_state['embedding_model'] = None
+    if "embedding_model" not in st.session_state:
+        st.session_state["embedding_model"] = None
 
-    if 'ollama_models' not in st.session_state:
-        st.session_state['ollama_models'] = []
+    if "ollama_models" not in st.session_state:
+        st.session_state["ollama_models"] = []
 
-    if 'selected_model' not in st.session_state:
-        st.session_state['selected_model'] = None
+    if "selected_model" not in st.session_state:
+        st.session_state["selected_model"] = None
 
-    if 'github_repo' not in st.session_state:
-        st.session_state['github_repo'] = None
+    if "github_repo" not in st.session_state:
+        st.session_state["github_repo"] = None
 
-    if 'file_list' not in st.session_state:
-        st.session_state['file_list'] = []
+    if "file_list" not in st.session_state:
+        st.session_state["file_list"] = []
 
-    if 'data_index' not in st.session_state:
-        st.session_state['data_index'] = None
+    if "data_index" not in st.session_state:
+        st.session_state["data_index"] = None
 
     if "messages" not in st.session_state:
-        st.session_state["messages"] = [{
-            "role": "assistant", 
-            "content": "Hello! Import some files or ingest a GitHub repo and we can get started."
-        }]
+        st.session_state["messages"] = [
+            {
+                "role": "assistant",
+                "content": "Hello! Import some files or ingest a GitHub repo and we can get started.",
+            }
+        ]

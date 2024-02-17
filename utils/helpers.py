@@ -8,6 +8,7 @@ import streamlit as st
 #
 ###################################
 
+
 def save_uploaded_file(uploaded_file: bytes, save_dir: str):
     """
     Saves the uploaded file to the specified directory.
@@ -20,11 +21,13 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
         f.write(uploaded_file.getbuffer())
     print(f"Saved to disk: {os.path.join(save_dir, uploaded_file.name)}")
 
+
 ###################################
 #
 # Process GitHub Repo
 #
 ###################################
+
 
 def process_github_repo(repo: str):
     """
@@ -33,7 +36,7 @@ def process_github_repo(repo: str):
     Parameters:
         repo (str): The name of the GitHub repository.
     """
-    print(repo) # Doesn't work?
+    print(repo)  # Doesn't work?
     github_endpoint = "https://github.com/" + st.session_state.github_repo
     print(github_endpoint)
     return
