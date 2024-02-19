@@ -1,11 +1,11 @@
-import datetime
+from datetime import datetime
 
 import streamlit as st
 
 def about():
     st.title("📚 Local RAG")
     st.caption(
-        f"Developed by Jon Fairbanks &copy; {datetime.datetime.now().year}"
+        f"Developed by Jon Fairbanks &copy; {datetime.now().year}"
     )
     st.write("")
 

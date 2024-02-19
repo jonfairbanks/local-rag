@@ -29,6 +29,9 @@ def set_initial_state():
     if "chunk_size" not in st.session_state:
         st.session_state["chunk_size"] = None
 
+    if "advanced" not in st.session_state:
+        st.session_state["advanced"] = False
+
     if "documents" not in st.session_state:
         st.session_state["documents"] = None
 

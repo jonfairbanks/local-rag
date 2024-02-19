@@ -7,7 +7,7 @@ import utils.ollama as ollama
 import utils.llama_index as llama_index
 
 def file_upload():
-    st.header("Directly import local files")
+    st.title("Directly import local files")
     st.caption(
         "Convert your local files to embeddings for utilization during chat"
     )
@@ -16,25 +16,17 @@ def file_upload():
     uploaded_files = st.file_uploader(
         "Select Files",
         accept_multiple_files=True,
-        # type=(
-        #     "css",
-        #     "csv",
-        #     "docx",
-        #     "epub",
-        #     "html",
-        #     "ipynb",
-        #     "jpeg",
-        #     "jpg",
-        #     "js",
-        #     "md",
-        #     "mp3",
-        #     "mp4",
-        #     "pdf",
-        #     "png",
-        #     "ppt",
-        #     "pptx",
-        #     "py"
-        # )
+        type=(
+            "csv",
+            "docx",
+            "epub",
+            "ipynb",
+            "json",  
+            "md",
+            "pdf",
+            "ppt",
+            "pptx",
+        )
     )
     if len(uploaded_files) > 0:
         st.session_state["file_list"] = uploaded_files
@@ -99,3 +91,7 @@ def file_upload():
                     state="complete",
                     expanded=False,
                 )
+
+    # st.caption(
+    #     "Although any uploads are supported, you will get the best results with: _csv, docx, epub, ipynb, md, pdf, ppt, pptx_"
+    # )

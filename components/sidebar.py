@@ -1,9 +1,9 @@
 import streamlit as st
 
-import tabs.about as about
-import tabs.file_upload as file_upload
-import tabs.github_repo as github_repo
-import tabs.settings as settings
+from components.tabs.about import about
+from components.tabs.file_upload import file_upload
+from components.tabs.github_repo import github_repo
+from components.tabs.settings import settings
 
 def sidebar():
     with st.sidebar:
