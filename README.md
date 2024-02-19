@@ -22,17 +22,18 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 - [x] Implement llama-index Chat Engine with memory
 - [ ] Swap to llama-index Chat Engine
 - [x] Function to handle file embeddings
+- [ ] Allow Switching of Embedding Model
 - [ ] Delete Files after Index created
+- [ ] Ability to Remove Files from Index
 - [ ] Function to handle GitHub repo ingestion
+- [ ] Support for JSON files
 - [x] Show Loaders in UI (file uploads, conversions, ...)
-- [ ] Export Data (uploaded files, chat history, ...)
+- [X] Export Data (uploaded files, chat history, ...)
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar
 - [ ] Docker Support
 - [ ] Implement Log Library
 - [ ] Cookies/Local-Storage for State
-- [ ] Ability to Remove Files from Index
-- [ ] Allow Switching of Embedding Model
 
 ### Resources
 - [Ollama](https://ollama.com/)

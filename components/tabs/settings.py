@@ -1,7 +1,11 @@
+import json
+
 import streamlit as st
 
 import utils.ollama as ollama
 #import utils.llama_index as llama_index
+
+from datetime import datetime
 
 def settings(): 
     st.header("Settings")
@@ -45,6 +49,17 @@ def settings():
                 value=st.session_state["chunk_size"],
                 disabled=True
             )
+
+    st.subheader("Export Data")
+    export_data_settings = st.container(border=True)
+    with export_data_settings:
+        st.write("Chat History")
+        st.download_button(
+            label="Download",
+            data=json.dumps(st.session_state["messages"]),
+            file_name=f"local-rag-chat-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json",
+            mime='application/json',
+        )
 
     st.toggle('Advanced Settings', key="advanced")
 
