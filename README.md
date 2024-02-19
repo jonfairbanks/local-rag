@@ -22,6 +22,7 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 - [x] Implement llama-index Chat Engine with memory
 - [ ] Swap to llama-index Chat Engine
 - [x] Function to handle file embeddings
+- [ ] Delete Files after Index created
 - [ ] Function to handle GitHub repo ingestion
 - [x] Show Loaders in UI (file uploads, conversions, ...)
 - [ ] Export Data (uploaded files, chat history, ...)

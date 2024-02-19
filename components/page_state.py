@@ -14,14 +14,26 @@ def set_initial_state():
     if "selected_model" not in st.session_state:
         st.session_state["selected_model"] = None
 
+    if "top_k" not in st.session_state:
+        st.session_state["top_k"] = 5
+
     if "github_repo" not in st.session_state:
         st.session_state["github_repo"] = None
 
     if "file_list" not in st.session_state:
         st.session_state["file_list"] = []
 
-    if "data_index" not in st.session_state:
-        st.session_state["data_index"] = None
+    if "embedding_model" not in st.session_state:
+        st.session_state["embedding_model"] = None
+
+    if "chunk_size" not in st.session_state:
+        st.session_state["chunk_size"] = None
+
+    if "documents" not in st.session_state:
+        st.session_state["documents"] = None
+
+    if "query_engine" not in st.session_state:
+        st.session_state["query_engine"] = None
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = [
