@@ -1,5 +1,7 @@
 import os
 
+import streamlit as st
+
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
@@ -20,8 +22,8 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 def create_service_context(
     llm,  # TODO: Determine type
-    embed_model: str = "local:BAAI/bge-large-en", # TODO: Allow users to set this
-    chunk_size: int = 1024,  # TODO: Might max out at 512
+    embed_model: str = "local:BAAI/bge-large-en-v1.5", # TODO: Allow users to set this
+    chunk_size: int = 1024 # TODO: Allow users to set this
 ):
     """
     Create a service context with the specified language model and embedding model.
@@ -73,22 +75,22 @@ def create_chat_memory(token_limit: int = 2500):
 ###################################
 
 
-def load_documents(data_dir: str, service_context):
+def load_documents(data_dir: str):
     """
     Creates a data index from documents stored in a directory.
 
     Parameters:
         - data_dir: Directory to load files from for embedding
-        - service_context: Llama-Index ServiceContext (if not set globally)
 
     Returns:
-        - VectorStoreIndex: An index containing vector representations of documents in the specified directory.
+        - TODO: FIX -- VectorStoreIndex: An index containing vector representations of documents in the specified directory.
         - None: If an exception occurs during the creation of the data index.
     """
     try:
         data_dir = os.getcwd() + "/data"
-        files = SimpleDirectoryReader(input_dir=data_dir, recursive=True).load_data()
-        documents = VectorStoreIndex.from_documents(files, show_progress=True)
+        files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
+        documents = files.load_data(files)
+        print(f"Loaded {len(documents):,} documents")
         return documents
     except Exception as err:
         print(f"Error creating data index: {err}")
@@ -109,7 +111,7 @@ def create_query_engine(documents, service_context):
     natural language queries on the index.
 
     Parameters:
-        - documents (List[Document]): A list of Document objects containing the
+        - documents (VectorStoreIndex): A list of Document objects containing the
         raw text data to be indexed.
         - service_context (ServiceContext): A ServiceContext object providing any 
         necessary configuration or authentication information for the underlying
@@ -119,10 +121,28 @@ def create_query_engine(documents, service_context):
         - query_engine (QueryEngine): A QueryEngine instance that can be used to
         perform natural language queries on the indexed documents.
     """
-    index = VectorStoreIndex.from_documents(
-        documents, service_context=service_context, show_progress=True
-    )
+    try:
+        index = VectorStoreIndex.from_documents(
+            documents=documents, service_context=service_context, show_progress=True
+        )
 
-    query_engine = index.as_query_engine()
+        # print(f"Index: {index}")
+        # print()
 
-    return query_engine
+        query_engine = index.as_query_engine(
+            similarity_top_k = 5, # Return additional results
+            service_context=service_context
+        )
+
+        # print(f"Query Engine: {query_engine}")
+        # print()
+
+        st.session_state["query_engine"] = query_engine
+
+        return query_engine
+    except Exception as e:
+        print(f"Error when creating Query Engine: {e}")
+        return
+
+
+    

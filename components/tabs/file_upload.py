@@ -47,6 +47,8 @@ def file_upload():
                     st.session_state.selected_model,
                     st.session_state.ollama_endpoint,
                 )
+                #resp = llm.complete("Hello!")
+                #print(resp)
                 service_context = llama_index.create_service_context(llm)
             except Exception as err:
                 print(f"Setting up Service Context failed: {err}")
@@ -64,16 +66,9 @@ def file_upload():
 
             st.caption("Creating File Index")
             try:
-                index = llama_index.create_query_engine(
+                llama_index.create_query_engine(
                     documents, service_context
                 )
-                print(f"Index: {index}")
-                query_engine = index.as_query_engine(
-                    similarity_top_k = 5,  # Returns additional results; TODO: Set via UI?
-                    service_context=service_context,
-                )
-                print(query_engine)
-                st.session_state["query_engine"] = query_engine
             except Exception as err:
                 print(f"Index Creation Error: {err}")
                 error = err
