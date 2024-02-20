@@ -22,8 +22,8 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 def create_service_context(
     llm,  # TODO: Determine type
-    embed_model: str = "local:BAAI/bge-large-en-v1.5", # TODO: Allow users to set this
-    chunk_size: int = 1024 # TODO: Allow users to set this
+    embed_model: str = "local:BAAI/bge-large-en-v1.5",  # TODO: Allow users to set this
+    chunk_size: int = 1024,  # TODO: Allow users to set this
 ):
     """
     Create a service context with the specified language model and embedding model.
@@ -37,9 +37,7 @@ def create_service_context(
     - A `ServiceContext` object with the specified settings.
     """
     service_context = ServiceContext.from_defaults(
-        llm=llm, 
-        embed_model=embed_model, 
-        chunk_size=chunk_size
+        llm=llm, embed_model=embed_model, chunk_size=chunk_size
     )
 
     set_global_service_context(service_context)
@@ -96,11 +94,13 @@ def load_documents(data_dir: str):
         print(f"Error creating data index: {err}")
         return None
 
+
 ###################################
 #
 # Create Query Engine
 #
 ###################################
+
 
 def create_query_engine(documents, service_context):
     """
@@ -130,8 +130,8 @@ def create_query_engine(documents, service_context):
         # print()
 
         query_engine = index.as_query_engine(
-            similarity_top_k = 5, # Return additional results
-            service_context=service_context
+            similarity_top_k=5,  # Return additional results
+            service_context=service_context,
         )
 
         # print(f"Query Engine: {query_engine}")
@@ -143,6 +143,3 @@ def create_query_engine(documents, service_context):
     except Exception as e:
         print(f"Error when creating Query Engine: {e}")
         return
-
-
-    

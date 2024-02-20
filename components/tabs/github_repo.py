@@ -2,11 +2,10 @@ import streamlit as st
 
 import utils.helpers as func
 
+
 def github_repo():
     st.header("Import files from a GitHub repo")
-    st.caption(
-        "Convert a GitHub repo to embeddings for utilization during chat"
-    )
+    st.caption("Convert a GitHub repo to embeddings for utilization during chat")
 
     github_container = st.container(border=True)
     with github_container:

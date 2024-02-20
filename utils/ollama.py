@@ -45,12 +45,12 @@ def get_models():
     Returns:
         - models: A list of available language model names.
     """
-    chat_client = create_client(st.session_state.ollama_endpoint)
+    chat_client = create_client(st.session_state["ollama_endpoint"])
     data = chat_client.list()
     models = []
     for model in data["models"]:
         models.append(model["name"])
-    st.session_state.ollama_models = models
+    st.session_state["ollama_models"] = models
     return models
 
 
@@ -89,15 +89,12 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
 ###################################
 
 
-def chat(prompt: str, model: str, base_url: str, request_timeout: int = 60):
+def chat(prompt: str):
     """
     Initiates a chat with the Ollama language model using the provided parameters.
 
     Parameters:
         - prompt (str): The starting prompt for the conversation.
-        - model (str): The name of the language model to use for the chat.
-        - base_url (str): The base URL of the Ollama API.
-        - request_timeout (int, optional): Timeout for API requests in seconds. Defaults to 60.
 
     Yields:
         - str: Successive chunks of conversation from the Ollama model.
@@ -120,7 +117,7 @@ def chat(prompt: str, model: str, base_url: str, request_timeout: int = 60):
 ###################################
 
 
-def context_chat(prompt: str, index: str):
+def context_chat(prompt: str, query_engine):
     """
     Initiates a chat with context using the Ollama language model and index.
 
@@ -135,10 +132,10 @@ def context_chat(prompt: str, index: str):
         - str: Successive chunks of conversation from the Ollama model with context.
     """
 
-    chat_engine = index.as_chat_engine(
+    chat_engine = query_engine.as_chat_engine(
         llm=create_ollama_llm(),
         memory=create_chat_memory(),
-        chat_mode="context",  # Might need changed
+        chat_mode="context",  # TODO: Might need changed
         system_prompt=(
             "You are a chatbot, able to have normal interactions, as well as talk"
             " about an essay discussing Paul Grahams life."

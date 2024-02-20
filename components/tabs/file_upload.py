@@ -6,27 +6,16 @@ import utils.helpers as func
 import utils.ollama as ollama
 import utils.llama_index as llama_index
 
+
 def file_upload():
     st.title("Directly import local files")
-    st.caption(
-        "Convert your local files to embeddings for utilization during chat"
-    )
+    st.caption("Convert your local files to embeddings for utilization during chat")
     st.write("")
 
     uploaded_files = st.file_uploader(
         "Select Files",
         accept_multiple_files=True,
-        type=(
-            "csv",
-            "docx",
-            "epub",
-            "ipynb",
-            "json",  
-            "md",
-            "pdf",
-            "ppt",
-            "pptx",
-        )
+        type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
     )
     if len(uploaded_files) > 0:
         st.session_state["file_list"] = uploaded_files
@@ -44,11 +33,10 @@ def file_upload():
             # Create llama-index service-context to use local LLMs and embeddings
             try:
                 llm = ollama.create_ollama_llm(
-                    st.session_state.selected_model,
-                    st.session_state.ollama_endpoint,
+                    st.session_state.selected_model, st.session_state.ollama_endpoint,
                 )
-                #resp = llm.complete("Hello!")
-                #print(resp)
+                # resp = llm.complete("Hello!")
+                # print(resp)
                 service_context = llama_index.create_service_context(llm)
             except Exception as err:
                 print(f"Setting up Service Context failed: {err}")
@@ -56,9 +44,7 @@ def file_upload():
 
             st.caption("Processing File Data")
             try:
-                documents = llama_index.load_documents(
-                    save_dir
-                )
+                documents = llama_index.load_documents(save_dir)
                 st.session_state.documents = documents
             except Exception as err:
                 print(f"Document Load Error: {err}")
@@ -66,18 +52,14 @@ def file_upload():
 
             st.caption("Creating File Index")
             try:
-                llama_index.create_query_engine(
-                    documents, service_context
-                )
+                llama_index.create_query_engine(documents, service_context)
             except Exception as err:
                 print(f"Index Creation Error: {err}")
                 error = err
 
             if error is not None:
                 status.update(
-                    label="File processing failed.",
-                    state="error",
-                    expanded=True,
+                    label="File processing failed.", state="error", expanded=True,
                 )
                 st.error(error)
             else:
