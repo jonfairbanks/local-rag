@@ -57,6 +57,7 @@ Docker:
 - [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
 - [ ] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
+- [ ] Upon first sending the first Chat message, the File Processing expander appears to re-run itself
 
 ### Resources
 - [Ollama](https://ollama.com/)
