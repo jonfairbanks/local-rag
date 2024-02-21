@@ -66,7 +66,7 @@ def load_documents(data_dir: str):
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
-        #print(f"Loaded {len(documents):,} documents")
+        # print(f"Loaded {len(documents):,} documents")
         return documents
     except Exception as err:
         print(f"Error creating data index: {err}")

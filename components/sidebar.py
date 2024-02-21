@@ -8,18 +8,13 @@ from components.tabs.settings import settings
 
 def sidebar():
     with st.sidebar:
-        tab1, tab2, tab3, tab4 = st.sidebar.tabs(
-            ["File Upload", "GitHub Repo", "Settings", "About"]
-        )
+        tab1, tab2, tab3 = st.sidebar.tabs(["My Files", "Settings", "About"])
 
         with tab1:
             file_upload()
 
         with tab2:
-            github_repo()
-
-        with tab3:
             settings()
 
-        with tab4:
+        with tab3:
             about()

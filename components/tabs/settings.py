@@ -4,8 +4,6 @@ import streamlit as st
 
 import utils.ollama as ollama
 
-# import utils.llama_index as llama_index
-
 from datetime import datetime
 
 
@@ -20,10 +18,11 @@ def settings():
             "Ollama Endpoint",
             key="ollama_endpoint",
             placeholder="http://localhost:11434",
-            value=st.session_state["ollama_endpoint"],
             on_change=ollama.get_models,
         )
-        st.selectbox("Model", st.session_state.ollama_models, key="selected_model")
+        st.selectbox(
+            "Model", st.session_state["ollama_models"], key="selected_model",
+        )
         st.button(
             "Refresh", on_click=ollama.get_models,
         )
@@ -38,12 +37,13 @@ def settings():
             st.text_input(
                 "System Prompt",
                 value="You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents.",
+                key="system_prompt",
                 disabled=True,
             )
-            option = st.selectbox(
+            st.selectbox(
                 "Chat Mode",
                 ("Best", "Condense Question", "Context", "Condense + Context"),
-                help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) to be used.",
+                help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) used when creating the Query Engine.",
                 disabled=True,
             )
             st.write("")
@@ -60,11 +60,14 @@ def settings():
             disabled=True,
         )
         if st.session_state["advanced"] == True:
+            st.caption(
+                "View the [Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
+            )
             st.text_input(
                 "Chunk Size",
                 help="This should not exceed the value provided by your embedding model.",
                 key="chunk_size",
-                placeholder="1024",
+                placeholder="512",
                 value=st.session_state["chunk_size"],
                 disabled=True,
             )
