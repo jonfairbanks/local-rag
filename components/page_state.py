@@ -15,7 +15,7 @@ def set_initial_state():
         st.session_state["selected_model"] = None
 
     if "top_k" not in st.session_state:
-        st.session_state["top_k"] = 5
+        st.session_state["top_k"] = None
 
     if "github_repo" not in st.session_state:
         st.session_state["github_repo"] = None

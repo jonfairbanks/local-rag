@@ -32,7 +32,18 @@ def settings():
                 "Top K",
                 options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                 help="A higher Top K will return more results at the expense of accuracy.",
-                value=st.session_state["top_k"],
+                value=5,
+                key="top_k",
+            )
+            st.text_input(
+                "System Prompt",
+                value="You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents.",
+                disabled=True,
+            )
+            option = st.selectbox(
+                "Chat Mode",
+                ("Best", "Condense Question", "Context", "Condense + Context"),
+                help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) to be used.",
                 disabled=True,
             )
             st.write("")

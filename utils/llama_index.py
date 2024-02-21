@@ -129,9 +129,15 @@ def create_query_engine(documents, service_context):
         # print(f"Index: {index}")
         # print()
 
+        if st.session_state["top_k"] is None:
+            top_k = 5
+        else:
+            top_k = st.session_state["top_k"]
+
         query_engine = index.as_query_engine(
-            similarity_top_k=5,  # Return additional results
+            similarity_top_k=top_k,  # A higher value will return additional results at the sake of accuracy
             service_context=service_context,
+            streaming=True,
         )
 
         # print(f"Query Engine: {query_engine}")

@@ -123,29 +123,20 @@ def context_chat(prompt: str, query_engine):
 
     Parameters:
         - prompt (str): The starting prompt for the conversation.
-        - model (str): The name of the language model to use for the chat.
-        - base_url (str): The base URL of the Ollama API.
-        - index (str): The index used for context in the conversation.
-        - request_timeout (int, optional): Timeout for API requests in seconds. Defaults to 60.
+        - query_engine (str): TODO: Write this section
 
     Yields:
         - str: Successive chunks of conversation from the Ollama model with context.
     """
 
-    chat_engine = query_engine.as_chat_engine(
-        llm=create_ollama_llm(),
-        memory=create_chat_memory(),
-        chat_mode="context",  # TODO: Might need changed
-        system_prompt=(
-            "You are a chatbot, able to have normal interactions, as well as talk"
-            " about an essay discussing Paul Grahams life."
-        ),
-    )
+    # print(type(query_engine)) # <class 'llama_index.core.query_engine.retriever_query_engine.RetrieverQueryEngine'>
 
     try:
-        stream = chat_engine.stream_chat(prompt)
-        for chunk in stream:
-            yield chunk.delta
+        stream = query_engine.query(prompt)
+        # stream.print_response_stream()
+
+        for text in stream.response_gen:
+            yield text
     except Exception as err:
         print(f"Ollama chat stream error: {err}")
         return
