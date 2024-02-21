@@ -1,0 +1,118 @@
+name: "Docker Release -- LATEST"
+
+on:
+  push:
+    branches:
+      - "master"
+      - "main"
+env:
+  TERM: 'xterm'
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  vuln-report:
+    name: Vulnerability Report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MODERATE'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  bump-tag:
+    name: Create new tag
+    needs: []
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.save-output.outputs.version }}
+    steps:
+      - name: Bump version and push tag
+        id: bump-tag
+        uses: anothrNick/github-tag-action@1.55.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BRANCHES: "master,main"
+          DEFAULT_BUMP: "patch"
+          INITIAL_VERSION: "1.0.0"
+      - name: Log new version
+        id: log-version
+        run: echo "New version -- ${{ steps.bump-tag.outputs.new_tag }}"
+      - name: Save version to Output
+        id: save-output
+        run: echo "version=${{ steps.bump-tag.outputs.new_tag }}" >> $GITHUB_OUTPUT
+
+  release:
+    name: Publish Docker Image
+    needs: [bump-tag]
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.docker-tags.outputs.tags }}
+    steps:
+      - name: Checkout source code
+        id: checkout-code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Build Docker Tags
+        id: docker-tags
+        run: |
+          CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [[ $CUR_BRANCH = "main" || $CUR_BRANCH = "master" ]]; then
+              TAGS="${{ github.repository }}:${{ needs.bump-tag.outputs.version }},${{ github.repository }}:latest"
+          fi
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        id: setup-qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: setup-buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ steps.vars.outputs.sha_short }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+        
+      - name: Build & Push Base Image
+        id: docker-build
+        uses: docker/build-push-action@v4
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          context: ./
+          platforms: linux/amd64,linux/arm64
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.docker-tags.outputs.tags }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Notify Slack
+        uses: act10ns/slack@v1
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()
