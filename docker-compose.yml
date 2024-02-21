@@ -10,7 +10,7 @@ services:
     ports:
       - '8501:8501/tcp'
     volumes:
-      - ${PWD}/local-rag:/app:rw
+      - ${PWD}:/home/appuser:rw
     deploy:
         resources:
           reservations:
