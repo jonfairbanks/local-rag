@@ -6,6 +6,12 @@ Offline, Open-Source RAG
 
 Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
 
+Features:
+- Supports 100% offline embeddings & LLMs; No OpenAI!
+- Streaming Responses
+- Conversation Memory
+- Chat Export
+
 ### Pre-Requisites
 
 - A pre-existing Ollama instance
@@ -20,7 +26,7 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 - [x] Refactor
 - [x] Migrate chat stream to llama-index
 - [x] Implement llama-index Chat Engine with memory
-- [ ] Swap to llama-index Chat Engine
+- [x] Swap to llama-index Chat Engine
 - [x] Function to handle file embeddings
 - [ ] Allow Switching of Embedding Model
 - [ ] Delete Files after Index created
