@@ -2,6 +2,10 @@
 
 ![local-rag-logo](logo.png)
 
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/jonfairbanks/local-rag)
+![GitHub last commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
+![GitHub License](https://img.shields.io/github/license/jonfairbanks/local-rag)
+
 Offline, Open-Source RAG
 
 Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
@@ -35,7 +39,7 @@ Features:
 - [x] Swap to llama-index Chat Engine
 - [x] Function to handle file embeddings
 - [ ] Allow Switching of Embedding Model
-- [ ] Delete Files after Index created/failed
+- [x] Delete Files after Index created/failed
 - [ ] Ability to Remove Files from Index
 - [ ] Function to handle GitHub repo ingestion
 - [ ] Support for JSON files
