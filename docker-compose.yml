@@ -3,6 +3,7 @@ services:
   local-rag:
     container_name: local-rag
     image: jonfairbanks/local-rag
+    network_mode: host
     restart: unless-stopped
     environment:
       - TZ=America/Los_Angeles
