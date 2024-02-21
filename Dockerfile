@@ -1,16 +1,38 @@
-FROM python:3.11-alpine
+FROM python:3.9-slim as base
 
-RUN adduser -D python
-RUN mkdir /app/ && chown -R python:python /app
-WORKDIR /app
+# Setup env
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONFAULTHANDLER 1
 
-USER python
 
-COPY --chown=python:python . .
+FROM base AS python-deps
 
-RUN pip install --trusted-host pypi.python.org pipenv
-RUN pipenv install && pipenv shell
+# Install pipenv and compilation dependencies
+RUN pip install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends gcc
 
-EXPOSE 8501
+# Install python dependencies in /.venv
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
-CMD ["streamlit", "run", "main.py"]
+
+FROM base AS runtime
+
+# Copy virtual env from python-deps stage
+COPY --from=python-deps /.venv /.venv
+ENV PATH="/.venv/bin:$PATH"
+
+# Create and switch to a new user
+RUN useradd --create-home appuser
+WORKDIR /home/appuser
+USER appuser
+
+# Install application into container
+COPY . .
+
+# Run the application
+ENTRYPOINT ["python", "-m", "streamlit"]
+CMD ["run", "main.py"]

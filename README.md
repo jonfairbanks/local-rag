@@ -23,8 +23,12 @@ Features:
 
 ### Setup
 
+Local:
 - `pip install pipenv && pipenv install`
 - `pipenv shell && streamlit run main.py`
+
+Docker:
+- `docker compose up -d`
 
 ### Usage
 
@@ -47,12 +51,12 @@ Features:
 - [X] Export Data (uploaded files, chat history, ...)
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar
-- [ ] Docker Support
+- [x] Docker Support
 - [ ] Implement Log Library
 
 ### Known Issues & Bugs
 - [ ] Refreshing the page loses all state (expected streamlit behavior; need to implement local-storage)
-- [ ] Files can be uploaded before Ollama config is set, leading to embedding errors
+- [x] Files can be uploaded before Ollama config is set, leading to embedding errors
 - [ ] Assuming localhost is used, Models are not automatically loaded at first page load
 
 ### Resources

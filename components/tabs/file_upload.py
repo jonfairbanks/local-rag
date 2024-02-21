@@ -11,12 +11,21 @@ def file_upload():
     st.title("Directly import local files")
     st.caption("Convert your local files to embeddings for utilization during chat")
     st.write("")
+    if(st.session_state['selected_model'] is not None):
+        uploaded_files = st.file_uploader(
+            "Select Files",
+            accept_multiple_files=True,
+            type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+        )
+    else:
+        st.info("Please configure Ollama settings before proceeding!")
+        uploaded_files = st.file_uploader(
+            "Select Files",
+            accept_multiple_files=True,
+            type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+            disabled=True
+        )
 
-    uploaded_files = st.file_uploader(
-        "Select Files",
-        accept_multiple_files=True,
-        type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
-    )
     if len(uploaded_files) > 0:
         st.session_state["file_list"] = uploaded_files
 
@@ -33,7 +42,7 @@ def file_upload():
             # Create llama-index service-context to use local LLMs and embeddings
             try:
                 llm = ollama.create_ollama_llm(
-                    st.session_state.selected_model, st.session_state.ollama_endpoint,
+                    st.session_state['selected_model'], st.session_state['ollama_endpoint'],
                 )
                 # resp = llm.complete("Hello!")
                 # print(resp)
