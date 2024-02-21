@@ -17,10 +17,16 @@ Features:
 - A pre-existing Ollama instance
 - Python 3.9+
 
-### Getting Started
+### Setup
 
 - `pip install pipenv && pipenv install`
 - `pipenv shell && streamlit run main.py`
+
+### Usage
+
+- Set your Ollama endpoint and model under Settings
+- Upload your documents for processing
+- Once complete, ask questions based on your documents!
 
 ### To Do
 - [x] Refactor
@@ -29,7 +35,7 @@ Features:
 - [x] Swap to llama-index Chat Engine
 - [x] Function to handle file embeddings
 - [ ] Allow Switching of Embedding Model
-- [ ] Delete Files after Index created
+- [ ] Delete Files after Index created/failed
 - [ ] Ability to Remove Files from Index
 - [ ] Function to handle GitHub repo ingestion
 - [ ] Support for JSON files
@@ -39,7 +45,11 @@ Features:
 - [x] About Tab in Sidebar
 - [ ] Docker Support
 - [ ] Implement Log Library
-- [ ] Cookies/Local-Storage for State
+
+### Known Issues & Bugs
+- [ ] Refreshing the page loses all state (expected streamlit behavior; need to implement local-storage)
+- [ ] Files can be uploaded before Ollama config is set, leading to embedding errors
+- [ ] Assuming localhost is used, Models are not automatically loaded at first page load
 
 ### Resources
 - [Ollama](https://ollama.com/)
