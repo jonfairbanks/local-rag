@@ -19,7 +19,6 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
     """
     with open(os.path.join(save_dir, uploaded_file.name), "wb") as f:
         f.write(uploaded_file.getbuffer())
-    print(f"Saved to disk: {os.path.join(save_dir, uploaded_file.name)}")
 
 
 ###################################

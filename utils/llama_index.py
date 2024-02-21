@@ -64,14 +64,17 @@ def load_documents(data_dir: str):
         - None: If an exception occurs during the creation of the data index.
     """
     try:
-        data_dir = os.getcwd() + "/data"
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
-        print(f"Loaded {len(documents):,} documents")
+        #print(f"Loaded {len(documents):,} documents")
         return documents
     except Exception as err:
         print(f"Error creating data index: {err}")
         return None
+    finally:
+        for file in os.scandir(data_dir):
+            if file.is_file() and not file.name.startswith("."):
+                os.remove(file.path)
 
 
 ###################################
