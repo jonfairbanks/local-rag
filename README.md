@@ -10,8 +10,7 @@ Offline, Open-Source RAG
 
 Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
 
-Features:
-- Supports 100% offline embeddings & LLMs; No OpenAI!
+- Offline Embeddings & LLMs Support (No OpenAI!)
 - Streaming Responses
 - Conversation Memory
 - Chat Export
@@ -55,9 +54,9 @@ Docker:
 - [ ] Implement Log Library
 
 ### Known Issues & Bugs
-- [ ] Refreshing the page loses all state (expected streamlit behavior; need to implement local-storage)
+- [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
-- [ ] Assuming localhost is used, Models are not automatically loaded at first page load
+- [ ] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
 
 ### Resources
 - [Ollama](https://ollama.com/)
