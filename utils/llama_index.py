@@ -23,7 +23,7 @@ from llama_index.core.memory import ChatMemoryBuffer
 def create_service_context(
     llm,  # TODO: Determine type
     embed_model: str = "local:BAAI/bge-large-en-v1.5",  # TODO: Allow users to set this
-    chunk_size: int = 1024,  # TODO: Allow users to set this
+    chunk_size: int = 512,  # TODO: Allow users to set this
 ):
     """
     Create a service context with the specified language model and embedding model.
@@ -43,27 +43,6 @@ def create_service_context(
     set_global_service_context(service_context)
 
     return service_context
-
-
-###################################
-#
-# Create Chat Memory
-#
-###################################
-
-
-def create_chat_memory(token_limit: int = 2500):
-    """
-    Creates a memory buffer for storing chat interactions.
-
-    Parameters:
-        - token_limit (int, optional): The maximum number of tokens to store in the memory buffer. Defaults to 2500.
-
-    Returns:
-        - ChatMemoryBuffer: An instance of the memory buffer for chat interactions.
-    """
-    memory = ChatMemoryBuffer.from_defaults(token_limit=token_limit)
-    return memory
 
 
 ###################################

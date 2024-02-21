@@ -3,8 +3,6 @@ import os
 
 import streamlit as st
 
-from utils.llama_index import create_chat_memory
-
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
@@ -133,8 +131,6 @@ def context_chat(prompt: str, query_engine):
 
     try:
         stream = query_engine.query(prompt)
-        # stream.print_response_stream()
-
         for text in stream.response_gen:
             yield text
     except Exception as err:
