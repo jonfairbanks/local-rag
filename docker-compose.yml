@@ -1,0 +1,19 @@
+version: '3'
+services:
+  local-rag:
+    container_name: local-rag
+    image: jonfairbanks/local-rag
+    restart: unless-stopped
+    environment:
+      - TZ=America/Los_Angeles
+    ports:
+      - '8501:8501/tcp'
+    volumes:
+      - ${PWD}/local-rag:/app:rw
+    deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                device_ids: ['0']
+                capabilities: [gpu]
