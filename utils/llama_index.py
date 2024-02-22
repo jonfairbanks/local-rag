@@ -22,25 +22,32 @@ from llama_index.core.memory import ChatMemoryBuffer
 
 def create_service_context(
     llm,  # TODO: Determine type
-    embed_model: str = "local:BAAI/bge-large-en-v1.5",  # TODO: Allow users to set this
-    chunk_size: int = 512,  # TODO: Allow users to set this
+    system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
+    embed_model: str = "BAAI/bge-large-en-v1.5",
+    chunk_size: int = 1024,  # Llama-Index default is 1024
 ):
     """
     Create a service context with the specified language model and embedding model.
 
     Parameters:
-    - llm (TODO: Determine type): The language model to use for generation.
-    - embed_model (str, optional): The embedding model to use for similarity search. Default is "local:BAAI/bge-large-en".
+    - llm (TODO: Determine type): The Llama-Index LLM instance to use for generation.
+    - system_prompt (str, optional): System prompt to use when creating the LLM.
+    - embed_model (str, optional): The embedding model to use for similarity search. Default is `BAAI/bge-large-en-v1.5`.
     - chunk_size (int, optional): The maximum number of tokens to consider at once. Default is 1024.
 
     Returns:
     - A `ServiceContext` object with the specified settings.
     """
+    formatted_embed_model = f"local:{embed_model}"
     service_context = ServiceContext.from_defaults(
-        llm=llm, embed_model=embed_model, chunk_size=chunk_size
+        llm=llm,
+        system_prompt=system_prompt,
+        embed_model=formatted_embed_model,
+        chunk_size=chunk_size,
     )
 
-    set_global_service_context(service_context)
+    # Note: this may be redundant since service_context is returned
+    set_global_service_context(service_context)  
 
     return service_context
 
@@ -108,22 +115,11 @@ def create_query_engine(documents, service_context):
             documents=documents, service_context=service_context, show_progress=True
         )
 
-        # print(f"Index: {index}")
-        # print()
-
-        if st.session_state["top_k"] is None:
-            top_k = 5
-        else:
-            top_k = st.session_state["top_k"]
-
         query_engine = index.as_query_engine(
-            similarity_top_k=top_k,  # A higher value will return additional results at the sake of accuracy
+            similarity_top_k=st.session_state["top_k"],
             service_context=service_context,
             streaming=True,
         )
-
-        # print(f"Query Engine: {query_engine}")
-        # print()
 
         st.session_state["query_engine"] = query_engine
 
