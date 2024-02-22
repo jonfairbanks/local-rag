@@ -37,27 +37,34 @@ Docker:
 
 ### To Do
 - [x] Refactor
-- [x] Migrate chat stream to llama-index
-- [x] Implement llama-index Chat Engine with memory
-- [x] Swap to llama-index Chat Engine
-- [x] Function to handle file embeddings
-- [ ] Allow Switching of Embedding Model
-- [x] Delete Files after Index created/failed
+- [x] Migrate Chat Stream to Llama-Index
+- [x] Implement Llama-Index Chat Engine with Memory
+- [x] Swap to Llama-Index Chat Engine
+- [x] Function to Handle File Embeddings
+- [ ] Allow Users to Set LLM Settings
+    - [x] System Prompt
+    - [ ] Chat Mode
+    - [x] top_k
+    - [x] chunk_size
+    - [x] chunk_overlap
+- [ ] Allow Switching of Embedding Model & Settings
+- [x] Delete Files after Index Created/Failed
 - [ ] Ability to Remove Files from Index
-- [ ] Function to handle GitHub repo ingestion
-- [ ] Support for JSON files
-- [x] Show Loaders in UI (file uploads, conversions, ...)
-- [X] Export Data (uploaded files, chat history, ...)
+- [ ] Function to Handle GitHub Repo Ingestion
+- [ ] Support for JSON Files
+- [x] Show Loaders in UI (File Uploads, Conversions, ...)
+- [x] Export Data (Uploaded Files, Chat History, ...)
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar
 - [x] Docker Support
 - [ ] Implement Log Library
+- [ ] Re-write Docstrings
 
 ### Known Issues & Bugs
 - [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
 - [ ] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
-- [ ] Upon first sending the first Chat message, the File Processing expander appears to re-run itself
+- [ ] Upon sending a Chat message, the File Processing expander appears to re-run itself
 
 ### Resources
 - [Ollama](https://ollama.com/)

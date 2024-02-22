@@ -64,11 +64,21 @@ def set_initial_state():
     if "advanced" not in st.session_state:
         st.session_state["advanced"] = False
 
+    if "system_prompt" not in st.session_state:
+        st.session_state[
+            "system_prompt"
+        ] = "You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents."
+
     if "top_k" not in st.session_state:
-        st.session_state["top_k"] = None
+        st.session_state[
+            "top_k"
+        ] = 3  # Default is 2; increasing to 5 will result in more documents being retrieved
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = None
 
+    if "other_embedding_model" not in st.session_state:
+        st.session_state["other_embedding_model"] = None
+
     if "chunk_size" not in st.session_state:
-        st.session_state["chunk_size"] = None
+        st.session_state["chunk_size"] = 1024

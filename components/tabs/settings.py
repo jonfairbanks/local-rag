@@ -30,15 +30,14 @@ def settings():
             st.select_slider(
                 "Top K",
                 options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                help="A higher Top K will return more results at the expense of accuracy.",
-                value=5,
+                help="The number of most similar documents to retrieve in response to a query.",
+                value=st.session_state["top_k"],
                 key="top_k",
             )
-            st.text_input(
+            st.text_area(
                 "System Prompt",
-                value="You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents.",
+                value=st.session_state["system_prompt"],
                 key="system_prompt",
-                disabled=True,
             )
             st.selectbox(
                 "Chat Mode",
@@ -50,26 +49,42 @@ def settings():
 
     st.subheader(
         "Embeddings",
-        help="Embeddings help convert your files to a format LLMs can understand.",
+        help="Embeddings are numerical representations of data, useful for tasks like document clustering and similarity detection when processing files, as they encode semantic meaning for efficient manipulation and retrieval.",
     )
     embedding_settings = st.container(border=True)
     with embedding_settings:
-        st.selectbox(
+        embedding_model = st.selectbox(
             "Model",
-            ["Default (bge-large-en-v1.5)", "Best (Salesforce/SFR-Embedding-Mistral)"],
-            disabled=True,
+            [
+                "Default (bge-large-en-v1.5)",
+                "Best (Salesforce/SFR-Embedding-Mistral)",
+                "Other",
+            ],
+            key="embedding_model",
         )
+        if embedding_model == "Other":
+            st.text_input(
+                "HuggingFace Model",
+                key="other_embedding_model",
+                placeholder="Salesforce/SFR-Embedding-Mistral",
+            )
         if st.session_state["advanced"] == True:
             st.caption(
-                "View the [Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
+                "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
             )
             st.text_input(
                 "Chunk Size",
-                help="This should not exceed the value provided by your embedding model.",
+                help="Reducing `chunk_size` improves embedding precision by focusing on smaller text portions. This enhances information retrieval accuracy but escalates computational demands due to processing more chunks.",
                 key="chunk_size",
-                placeholder="512",
+                placeholder="1024",
                 value=st.session_state["chunk_size"],
-                disabled=True,
+            )
+            st.text_input(
+                "Chunk Overlap",
+                help="`chunk_overlap` sets the overlap between consecutive document chunks. It prevents loss of information at chunk boundaries. For instance, a value of 20 means a 20-token overlap. Adjusting this parameter affects the precision and generality of the calculated embeddings.",
+                key="chunk_overlap",
+                placeholder="20",
+                value=st.session_state["chunk_overlap"],
             )
 
     st.subheader("Export Data")

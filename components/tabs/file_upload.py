@@ -12,6 +12,7 @@ def file_upload():
     st.caption("Convert your files to embeddings for utilization during chat")
     st.write("")
 
+    # Force users to confirm Settings before uploading files
     if st.session_state["selected_model"] is not None:
         uploaded_files = st.file_uploader(
             "Select Files",
@@ -55,9 +56,37 @@ def file_upload():
                     st.session_state["selected_model"],
                     st.session_state["ollama_endpoint"],
                 )
+
                 # resp = llm.complete("Hello!")
                 # print(resp)
-                service_context = llama_index.create_service_context(llm)
+
+                # Determine embedding model to use
+
+                embedding_model = st.session_state["embedding_model"]
+                hf_embedding_model = None
+
+                if embedding_model == None:
+                    print("No embedding model set; using defaults...")
+                    hf_embedding_model = "BAAI/bge-large-en-v1.5"
+
+                if embedding_model == "Default (bge-large-en-v1.5)":
+                    print("Using default embedding model...")
+                    hf_embedding_model = "BAAI/bge-large-en-v1.5"
+
+                if embedding_model == "Best (Salesforce/SFR-Embedding-Mistral)":
+                    print("Using the Salesforce embedding model; RIP yer VRAM...")
+                    hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
+
+                if embedding_model == "Other":
+                    print("Using a user-provided embedding model...")
+                    hf_embedding_model = st.session_state["other_embedding_model"]
+
+                service_context = llama_index.create_service_context(
+                    llm,
+                    st.session_state["system_prompt"],
+                    hf_embedding_model,
+                    st.session_state["chunk_size"],
+                )
             except Exception as err:
                 print(f"Setting up Service Context failed: {err}")
                 error = err
