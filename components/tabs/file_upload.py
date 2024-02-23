@@ -73,7 +73,7 @@ def file_upload():
                     print("Using default embedding model...")
                     hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
-                if embedding_model == "Best (Salesforce/SFR-Embedding-Mistral)":
+                if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
                     print("Using the Salesforce embedding model; RIP yer VRAM...")
                     hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
 

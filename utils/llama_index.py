@@ -43,7 +43,7 @@ def create_service_context(
         llm=llm,
         system_prompt=system_prompt,
         embed_model=formatted_embed_model,
-        chunk_size=chunk_size,
+        chunk_size=int(chunk_size),
     )
 
     # Note: this may be redundant since service_context is returned
