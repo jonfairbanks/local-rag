@@ -38,6 +38,8 @@ jobs:
     outputs:
       version: ${{ steps.save-output.outputs.version }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Bump version and push tag
         id: bump-tag
         uses: anothrNick/github-tag-action@1.67.0
