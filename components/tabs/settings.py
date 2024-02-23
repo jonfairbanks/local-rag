@@ -57,7 +57,7 @@ def settings():
             "Model",
             [
                 "Default (bge-large-en-v1.5)",
-                "Best (Salesforce/SFR-Embedding-Mistral)",
+                "Large (Salesforce/SFR-Embedding-Mistral)",
                 "Other",
             ],
             key="embedding_model",
@@ -78,13 +78,6 @@ def settings():
                 key="chunk_size",
                 placeholder="1024",
                 value=st.session_state["chunk_size"],
-            )
-            st.text_input(
-                "Chunk Overlap",
-                help="`chunk_overlap` sets the overlap between consecutive document chunks. It prevents loss of information at chunk boundaries. For instance, a value of 20 means a 20-token overlap. Adjusting this parameter affects the precision and generality of the calculated embeddings.",
-                key="chunk_overlap",
-                placeholder="20",
-                value=st.session_state["chunk_overlap"],
             )
 
     st.subheader("Export Data")
