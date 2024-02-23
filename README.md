@@ -1,6 +1,6 @@
 # 📚 Local RAG
 
-![local-rag-logo](logo.png)
+![local-rag-demo](demo.gif)
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/jonfairbanks/local-rag)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
@@ -46,10 +46,9 @@ Docker:
     - [ ] Chat Mode
     - [x] top_k
     - [x] chunk_size
-    - [x] chunk_overlap
-- [ ] Allow Switching of Embedding Model & Settings
+    - [ ] chunk_overlap
+- [x] Allow Switching of Embedding Model & Settings
 - [x] Delete Files after Index Created/Failed
-- [ ] Ability to Remove Files from Index
 - [ ] Function to Handle GitHub Repo Ingestion
 - [ ] Support for JSON Files
 - [x] Show Loaders in UI (File Uploads, Conversions, ...)
@@ -64,7 +63,7 @@ Docker:
 - [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
 - [ ] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
-- [ ] Upon sending a Chat message, the File Processing expander appears to re-run itself
+- [ ] Upon sending a Chat message, the File Processing expander appears to re-run itself (seems something is not using state correctly)
 
 ### Resources
 - [Ollama](https://ollama.com/)
@@ -73,3 +72,4 @@ Docker:
 - [Ollama w/ Llama-Index](https://docs.llamaindex.ai/en/stable/examples/llm/ollama.html)
 - [RAG w/ Llama-Index](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)
 - [Llama-Index Chat Engine](https://docs.llamaindex.ai/en/stable/examples/chat_engine/chat_engine_context.html)
+- [PoC Notebook](https://github.com/fairbanksio/notebooks/blob/main/llm/local/github-rag-prep.ipynb)
