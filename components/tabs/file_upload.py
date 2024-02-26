@@ -6,6 +6,8 @@ import utils.helpers as func
 import utils.ollama as ollama
 import utils.llama_index as llama_index
 
+from components.tabs.github_repo import github_repo
+
 
 def file_upload():
     st.title("Directly import your files")
@@ -14,19 +16,23 @@ def file_upload():
 
     # Force users to confirm Settings before uploading files
     if st.session_state["selected_model"] is not None:
-        uploaded_files = st.file_uploader(
-            "Select Files",
-            accept_multiple_files=True,
-            type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
-        )
+        file_upload_container = st.container(border=True)
+        with file_upload_container:
+            uploaded_files = st.file_uploader(
+                "Select Files",
+                accept_multiple_files=True,
+                type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+            )
     else:
         st.warning("Please configure Ollama settings before proceeding!", icon="⚠️")
-        uploaded_files = st.file_uploader(
-            "Select Files",
-            accept_multiple_files=True,
-            type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
-            disabled=True,
-        )
+        file_upload_container = st.container(border=True)
+        with file_upload_container:
+            uploaded_files = st.file_uploader(
+                "Select Files",
+                accept_multiple_files=True,
+                type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+                disabled=True,
+            )
 
     if len(uploaded_files) > 0:
         st.session_state["file_list"] = uploaded_files
@@ -131,4 +137,4 @@ def file_upload():
                 )
 
     with st.expander("GitHub Repo", expanded=False):
-        st.write(":grey[Coming Soon&trade;]")
+        github_repo()
