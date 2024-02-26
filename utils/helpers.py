@@ -24,6 +24,7 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
     with open(os.path.join(save_dir, uploaded_file.name), "wb") as f:
         f.write(uploaded_file.getbuffer())
 
+
 ###################################
 #
 # Confirm a GitHub Repo Exists
@@ -38,6 +39,7 @@ def validate_github_repo(repo: str):
         return True
     else:
         return False
+
 
 ###################################
 #
@@ -54,7 +56,7 @@ def clone_github_repo(repo: str):
         repo (str): The name of the GitHub repository.
     """
     repo_endpoint = "https://github.com/" + repo + ".git"
-    if(repo_endpoint is not None):
+    if repo_endpoint is not None:
         save_dir = os.getcwd() + "/data"
         clone_command = f"git clone -q {repo_endpoint} {save_dir}/{repo}"
         try:
@@ -64,7 +66,7 @@ def clone_github_repo(repo: str):
         except Exception as e:
             Exception(f"Error cloning {repo} GitHub repo: {e}")
             return False
-        
+
     else:
         Exception(f"Failed to process GitHub repo {st.session_state['github_repo']}")
         return False

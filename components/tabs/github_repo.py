@@ -18,16 +18,16 @@ def github_repo():
             placeholder="jonfairbanks/local-rag",
             key="github_repo",
         )
-        
+
         repo_processed = None
         repo_processed = st.button(
-            "Process Repo", 
+            "Process Repo",
             on_click=func.clone_github_repo,
-            args=(st.session_state['github_repo'],),
-        ) # TODO: Should this be with st.button?
-        
+            args=(st.session_state["github_repo"],),
+        )  # TODO: Should this be with st.button?
+
         with st.spinner("Processing..."):
-            if(repo_processed is True):
+            if repo_processed is True:
                 error = None
 
                 ######################################
@@ -59,7 +59,9 @@ def github_repo():
                         hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
                     if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
-                        logs.log.info("Using the Salesforce embedding model; RIP yer VRAM...")
+                        logs.log.info(
+                            "Using the Salesforce embedding model; RIP yer VRAM..."
+                        )
                         hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
 
                     if embedding_model == "Other":
@@ -104,7 +106,7 @@ def github_repo():
                 #####################
                 # Remove data files #
                 #####################
-                
+
                 try:
                     save_dir = os.getcwd() + "/data"
                     shutil.rmtree(save_dir)
@@ -126,7 +128,7 @@ def github_repo():
         st.text_input(
             "Select a GitHub.com repo",
             placeholder="jonfairbanks/local-rag",
-            disabled=True
+            disabled=True,
         )
         st.button(
             "Process Repo",

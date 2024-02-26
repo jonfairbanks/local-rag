@@ -47,7 +47,7 @@ def create_service_context(
     )
 
     # Note: this may be redundant since service_context is returned
-    set_global_service_context(service_context)  
+    set_global_service_context(service_context)
 
     return service_context
 
@@ -102,7 +102,7 @@ def create_query_engine(documents, service_context):
     Parameters:
         - documents (VectorStoreIndex): A list of Document objects containing the
         raw text data to be indexed.
-        - service_context (ServiceContext): A ServiceContext object providing any 
+        - service_context (ServiceContext): A ServiceContext object providing any
         necessary configuration or authentication information for the underlying
         index implementation.
 

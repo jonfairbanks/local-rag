@@ -21,7 +21,17 @@ def file_upload():
             uploaded_files = st.file_uploader(
                 "Select Files",
                 accept_multiple_files=True,
-                type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+                type=(
+                    "csv",
+                    "docx",
+                    "epub",
+                    "ipynb",
+                    "json",
+                    "md",
+                    "pdf",
+                    "ppt",
+                    "pptx",
+                ),
             )
     else:
         st.warning("Please configure Ollama settings before proceeding!", icon="⚠️")
@@ -30,7 +40,17 @@ def file_upload():
             uploaded_files = st.file_uploader(
                 "Select Files",
                 accept_multiple_files=True,
-                type=("csv", "docx", "epub", "ipynb", "json", "md", "pdf", "ppt", "pptx",),
+                type=(
+                    "csv",
+                    "docx",
+                    "epub",
+                    "ipynb",
+                    "json",
+                    "md",
+                    "pdf",
+                    "ppt",
+                    "pptx",
+                ),
                 disabled=True,
             )
 
@@ -126,7 +146,9 @@ def file_upload():
 
             if error is not None:
                 status.update(
-                    label="File processing failed.", state="error", expanded=True,
+                    label="File processing failed.",
+                    state="error",
+                    expanded=True,
                 )
                 st.error(error)
             else:

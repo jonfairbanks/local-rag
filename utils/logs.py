@@ -1,7 +1,8 @@
 import logging
 import sys
 
-def setup_logger(log_file='local-rag.log', level=logging.INFO):
+
+def setup_logger(log_file="local-rag.log", level=logging.INFO):
     logger = logging.getLogger(__name__)
     logger.setLevel(level)
 
@@ -11,7 +12,9 @@ def setup_logger(log_file='local-rag.log', level=logging.INFO):
     console_handler = logging.StreamHandler(stream=sys.stdout)
     console_handler.setLevel(level)
 
-    log_format = logging.Formatter('%(asctime)s - %(module)s - %(levelname)s - %(message)s')
+    log_format = logging.Formatter(
+        "%(asctime)s - %(module)s - %(levelname)s - %(message)s"
+    )
     file_handler.setFormatter(log_format)
     console_handler.setFormatter(log_format)
 
@@ -19,5 +22,6 @@ def setup_logger(log_file='local-rag.log', level=logging.INFO):
     logger.addHandler(console_handler)
 
     return logger
+
 
 log = setup_logger()
