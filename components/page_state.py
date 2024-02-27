@@ -33,7 +33,7 @@ def set_initial_state():
         st.session_state["messages"] = [
             {
                 "role": "assistant",
-                "content": "Hello! Import some files or ingest a GitHub repo and we can get started.",
+                "content": "Welcome to Local RAG! To begin, please either import some files or ingest a GitHub repo. Once you've completed those steps, we can continue the conversation and explore how I can assist you further.",
             }
         ]
 
