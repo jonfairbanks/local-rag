@@ -21,8 +21,13 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
         uploaded_file (BytesIO): The uploaded file content.
         save_dir (str): The directory where the file will be saved.
     """
-    with open(os.path.join(save_dir, uploaded_file.name), "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    try:
+        if not os.path.exists(save_dir): 
+            os.makedirs(save_dir)
+        with open(os.path.join(save_dir, uploaded_file.name), "wb") as f:
+            f.write(uploaded_file.getbuffer())
+    except Exception as e:
+        logs.log.info(f"Error saving upload to disk: {e}")
 
 
 ###################################
