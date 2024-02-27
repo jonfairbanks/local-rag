@@ -33,7 +33,7 @@ def set_initial_state():
         st.session_state["messages"] = [
             {
                 "role": "assistant",
-                "content": "Hello! Import some files or ingest a GitHub repo and we can get started.",
+                "content": "Welcome to Local RAG! To begin, please either import some files or ingest a GitHub repo. Once you've completed those steps, we can continue the conversation and explore how I can assist you further.",
             }
         ]
 
@@ -65,14 +65,14 @@ def set_initial_state():
         st.session_state["advanced"] = False
 
     if "system_prompt" not in st.session_state:
-        st.session_state[
-            "system_prompt"
-        ] = "You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents."
+        st.session_state["system_prompt"] = (
+            "You are a sophisticated virtual assistant designed to assist users in comprehensively understanding and extracting insights from a wide range of documents at their disposal. Your expertise lies in tackling complex inquiries and providing insightful analyses based on the information contained within these documents."
+        )
 
     if "top_k" not in st.session_state:
-        st.session_state[
-            "top_k"
-        ] = 3  # Default is 2; increasing to 5 will result in more documents being retrieved
+        st.session_state["top_k"] = (
+            3  # Default is 2; increasing to 5 will result in more documents being retrieved
+        )
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = None

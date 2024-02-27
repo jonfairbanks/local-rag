@@ -2,7 +2,6 @@ import streamlit as st
 
 from components.tabs.about import about
 from components.tabs.file_upload import file_upload
-from components.tabs.github_repo import github_repo
 from components.tabs.settings import settings
 
 

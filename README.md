@@ -18,7 +18,7 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 ### Pre-Requisites
 
 - A pre-existing Ollama instance
-- Python 3.9+
+- Python 3.10+
 
 ### Setup
 
@@ -36,7 +36,8 @@ Docker:
 - Once complete, ask questions based on your documents!
 
 ### To Do
-- [x] Refactor
+- [x] Refactor into modules
+- [ ] Refactor file processing logic
 - [x] Migrate Chat Stream to Llama-Index
 - [x] Implement Llama-Index Chat Engine with Memory
 - [x] Swap to Llama-Index Chat Engine
@@ -49,15 +50,21 @@ Docker:
     - [ ] chunk_overlap
 - [x] Allow Switching of Embedding Model & Settings
 - [x] Delete Files after Index Created/Failed
-- [ ] Function to Handle GitHub Repo Ingestion
-- [ ] Support for JSON Files
+- [x] Support Additional Import Options
+    - [x] GitHub Repos
+    - [ ] Websites
+- [ ] Remove File Type Limitations for Uploads
 - [x] Show Loaders in UI (File Uploads, Conversions, ...)
 - [x] Export Data (Uploaded Files, Chat History, ...)
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar
 - [x] Docker Support
-- [ ] Implement Log Library
+- [x] Implement Log Library
+- [ ] Improve Logging
 - [ ] Re-write Docstrings
+- [ ] Additional Error Handling
+    - [x] Starting a chat without an Ollama model set
+    - [ ] Incorrect GitHub repos
 
 ### Known Issues & Bugs
 - [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)

@@ -21,10 +21,13 @@ def settings():
             on_change=ollama.get_models,
         )
         st.selectbox(
-            "Model", st.session_state["ollama_models"], key="selected_model",
+            "Model",
+            st.session_state["ollama_models"],
+            key="selected_model",
         )
         st.button(
-            "Refresh", on_click=ollama.get_models,
+            "Refresh",
+            on_click=ollama.get_models,
         )
         if st.session_state["advanced"] == True:
             st.select_slider(
