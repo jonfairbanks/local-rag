@@ -6,9 +6,9 @@ from utils.ollama import chat, context_chat
 def chatbox():
     if prompt := st.chat_input("How can I help?"):
         # Prevent submission if Ollama endpoint is not set
-        if not st.session_state["ollama_endpoint"]:
+        if not st.session_state["query_engine"]:
             st.warning(
-                "Please set an Ollama Endpoint under Settings before continuing."
+                "Please confirm settings and upload files before proceeding."
             )
             st.stop()
 
