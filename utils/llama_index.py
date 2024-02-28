@@ -2,6 +2,9 @@ import os
 
 import streamlit as st
 
+import utils.logs as logs
+
+
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
@@ -73,10 +76,10 @@ def load_documents(data_dir: str):
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
-        # print(f"Loaded {len(documents):,} documents")
+        # logs.log.info(f"Loaded {len(documents):,} documents")
         return documents
     except Exception as err:
-        print(f"Error creating data index: {err}")
+        logs.log.error(f"Error creating data index: {err}")
         return None
     finally:
         for file in os.scandir(data_dir):
@@ -125,5 +128,5 @@ def create_query_engine(documents, service_context):
 
         return query_engine
     except Exception as e:
-        print(f"Error when creating Query Engine: {e}")
+        logs.log.error(f"Error when creating Query Engine: {e}")
         return

@@ -1,5 +1,7 @@
 import streamlit as st
 
+import utils.logs as logs
+
 from utils.ollama import get_models
 
 
@@ -20,7 +22,7 @@ def set_initial_state():
             models = get_models()
             st.session_state["ollama_models"] = models
         except Exception as err:
-            print(
+            logs.log.warn(
                 f"Warning: Initial loading of Ollama models failed. You might be hosting Ollama somewhere other than localhost. -- {err}"
             )
             st.session_state["ollama_models"] = []

@@ -46,7 +46,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [ ] Refactor file processing logic
 - [x] Refactor README
 - [x] Implement Log Library
-- [ ] Improve Logging
+- [x] Improve Logging
 - [ ] Re-write Docstrings
 - [ ] Tests
 
@@ -55,4 +55,4 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [ ] **HIGH PRIORITY:** Upon sending a Chat message, the File Processing expander appears to re-run itself (seems something is not using state correctly)
 - [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
-- [ ] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
+- [x] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option

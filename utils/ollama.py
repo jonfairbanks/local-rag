@@ -3,6 +3,8 @@ import os
 
 import streamlit as st
 
+import utils.logs as logs
+
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
@@ -74,7 +76,7 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
     try:
         llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
     except Exception as e:
-        print(f"Error creating Ollama language model: {e}")
+        logs.log.error(f"Error creating Ollama language model: {e}")
         return None
     else:
         return llm
@@ -104,7 +106,7 @@ def chat(prompt: str):
         for chunk in stream:
             yield chunk.delta
     except Exception as err:
-        print(f"Ollama chat stream error: {err}")
+        logs.log.error(f"Ollama chat stream error: {err}")
         return
 
 
@@ -134,5 +136,5 @@ def context_chat(prompt: str, query_engine):
         for text in stream.response_gen:
             yield text
     except Exception as err:
-        print(f"Ollama chat stream error: {err}")
+        logs.log.error(f"Ollama chat stream error: {err}")
         return

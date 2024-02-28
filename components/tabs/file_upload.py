@@ -92,19 +92,19 @@ def file_upload():
                 hf_embedding_model = None
 
                 if embedding_model == None:
-                    print("No embedding model set; using defaults...")
+                    logs.log.info("No embedding model set; using defaults...")
                     hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
                 if embedding_model == "Default (bge-large-en-v1.5)":
-                    print("Using default embedding model...")
+                    logs.log.info("Using default embedding model...")
                     hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
                 if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
-                    print("Using the Salesforce embedding model; RIP yer VRAM...")
+                    logs.log.info("Using the Salesforce embedding model; RIP yer VRAM...")
                     hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
 
                 if embedding_model == "Other":
-                    print("Using a user-provided embedding model...")
+                    logs.log.info("Using a user-provided embedding model...")
                     hf_embedding_model = st.session_state["other_embedding_model"]
 
                 service_context = llama_index.create_service_context(
@@ -114,7 +114,7 @@ def file_upload():
                     st.session_state["chunk_size"],
                 )
             except Exception as err:
-                print(f"Setting up Service Context failed: {err}")
+                logs.log.error(f"Setting up Service Context failed: {err}")
                 error = err
 
             #######################################
@@ -126,7 +126,7 @@ def file_upload():
                 documents = llama_index.load_documents(save_dir)
                 st.session_state["documents"] = documents
             except Exception as err:
-                print(f"Document Load Error: {err}")
+                logs.log.error(f"Document Load Error: {err}")
                 error = err
 
             ###########################################
@@ -137,7 +137,7 @@ def file_upload():
             try:
                 llama_index.create_query_engine(documents, service_context)
             except Exception as err:
-                print(f"Index Creation Error: {err}")
+                logs.log.error(f"Index Creation Error: {err}")
                 error = err
 
             #####################
