@@ -7,9 +7,7 @@ def chatbox():
     if prompt := st.chat_input("How can I help?"):
         # Prevent submission if Ollama endpoint is not set
         if not st.session_state["query_engine"]:
-            st.warning(
-                "Please confirm settings and upload files before proceeding."
-            )
+            st.warning("Please confirm settings and upload files before proceeding.")
             st.stop()
 
         # Add the user input to messages state

@@ -44,8 +44,15 @@ def settings():
             )
             st.selectbox(
                 "Chat Mode",
-                ("Best", "Condense Question", "Context", "Condense + Context"),
+                (
+                    "best",
+                    "condense_question",
+                    "context",
+                    "condense_plus_context",
+                    "react",
+                ),
                 help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) used when creating the Query Engine.",
+                key="chat_mode",
                 disabled=True,
             )
             st.write("")
@@ -81,6 +88,13 @@ def settings():
                 key="chunk_size",
                 placeholder="1024",
                 value=st.session_state["chunk_size"],
+            )
+            st.text_input(
+                "Chunk Overlap",
+                help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
+                key="chunk_overlap",
+                placeholder="20",
+                value=st.session_state["chunk_overlap"],
             )
 
     st.subheader("Export Data")
