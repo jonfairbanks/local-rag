@@ -2,6 +2,7 @@ import streamlit as st
 
 from components.tabs.local_files import local_files
 from components.tabs.github_repo import github_repo
+from components.tabs.website import website
 
 
 def file_upload():
@@ -14,3 +15,6 @@ def file_upload():
 
     with st.expander("🗂️ &nbsp;**GitHub Repo**", expanded=False):
         github_repo()
+
+    with st.expander("🌐 &nbsp; **Website**", expanded=False):
+        website()
