@@ -8,6 +8,7 @@ import utils.ollama as ollama
 import utils.llama_index as llama_index
 import utils.logs as logs
 
+
 def local_files():
     # Force users to confirm Settings before uploading files
     if st.session_state["selected_model"] is not None:
@@ -24,7 +25,7 @@ def local_files():
                 "pdf",
                 "ppt",
                 "pptx",
-                "txt"
+                "txt",
             ),
         )
     else:
@@ -75,7 +76,7 @@ def local_files():
                     st.session_state["selected_model"],
                     st.session_state["ollama_endpoint"],
                 )
-                st.session_state['llm'] = llm
+                st.session_state["llm"] = llm
                 st.caption("✔️ LLM Initialized")
 
                 # resp = llm.complete("Hello!")
@@ -103,11 +104,11 @@ def local_files():
                     hf_embedding_model = st.session_state["other_embedding_model"]
 
                 llama_index.create_service_context(
-                    st.session_state['llm'],
+                    st.session_state["llm"],
                     st.session_state["system_prompt"],
                     hf_embedding_model,
                     st.session_state["chunk_size"],
-                    #st.session_state["chunk_overlap"],
+                    # st.session_state["chunk_overlap"],
                 )
                 st.caption("✔️ Context Created")
             except Exception as err:
@@ -132,8 +133,7 @@ def local_files():
 
             try:
                 llama_index.create_query_engine(
-                    st.session_state["documents"], 
-                    st.session_state["service_context"]
+                    st.session_state["documents"], st.session_state["service_context"]
                 )
                 st.caption("✔️ Created File Index")
             except Exception as err:

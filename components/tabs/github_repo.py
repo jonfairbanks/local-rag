@@ -40,7 +40,7 @@ def github_repo():
                         st.session_state["selected_model"],
                         st.session_state["ollama_endpoint"],
                     )
-                    st.session_state['llm'] = llm
+                    st.session_state["llm"] = llm
                     st.caption("✔️ LLM Initialized")
 
                     # resp = llm.complete("Hello!")
@@ -48,7 +48,7 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Failed to setup LLM: {err}")
                     error = err
-                
+
                 ####################################
                 # Determine embedding model to use #
                 ####################################
@@ -104,8 +104,8 @@ def github_repo():
 
                 try:
                     llama_index.create_query_engine(
-                        st.session_state["documents"], 
-                        st.session_state["service_context"]
+                        st.session_state["documents"],
+                        st.session_state["service_context"],
                     )
                     st.caption("✔️ Created File Index")
                 except Exception as err:

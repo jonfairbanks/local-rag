@@ -81,7 +81,7 @@ def set_initial_state():
         )
 
     if "top_k" not in st.session_state:
-        st.session_state["top_k"] = (3)
+        st.session_state["top_k"] = 3
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = None

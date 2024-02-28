@@ -44,7 +44,13 @@ def settings():
             )
             st.selectbox(
                 "Chat Mode",
-                ("best", "condense_question", "context", "condense_plus_context", "react"),
+                (
+                    "best",
+                    "condense_question",
+                    "context",
+                    "condense_plus_context",
+                    "react",
+                ),
                 help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) used when creating the Query Engine.",
                 key="chat_mode",
                 disabled=True,

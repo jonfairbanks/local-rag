@@ -21,6 +21,7 @@ from llama_index.core import (
 #
 ###################################
 
+
 @st.cache_resource(show_spinner=False)
 def create_service_context(
     _llm,  # TODO: Determine type
@@ -51,20 +52,21 @@ def create_service_context(
             chunk_size=int(chunk_size),
             # chunk_overlap=int(chunk_overlap),
         )
-        st.session_state['service_context'] = service_context
+        st.session_state["service_context"] = service_context
         # Note: this may be redundant since service_context is returned
         set_global_service_context(service_context)
         return service_context
     except Exception as e:
         logs.log.error(f"Failed to create service_context: {e}")
-        Exception(f"Failed to create service_context: {e}") # TODO: Redundant?
-        
+        Exception(f"Failed to create service_context: {e}")  # TODO: Redundant?
+
 
 ###################################
 #
 # Load Documents
 #
 ###################################
+
 
 @st.cache_resource(show_spinner=False)
 def load_documents(data_dir: str):
@@ -97,6 +99,7 @@ def load_documents(data_dir: str):
 # Create Query Engine
 #
 ###################################
+
 
 @st.cache_resource(show_spinner=False)
 def create_query_engine(_documents, _service_context):
