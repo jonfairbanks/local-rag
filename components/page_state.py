@@ -13,7 +13,7 @@ def set_initial_state():
         st.session_state["ollama_endpoint"] = "http://localhost:11434"
 
     if "embedding_model" not in st.session_state:
-        st.session_state["embedding_model"] = None
+        st.session_state["embedding_model"] = "Default (bge-large-en-v1.5)"
 
     if "ollama_models" not in st.session_state:
         try:
@@ -27,7 +27,7 @@ def set_initial_state():
             pass
 
     if "selected_model" not in st.session_state:
-        st.session_state["selected_model"] = None
+        st.session_state["selected_model"] = st.session_state["ollama_models"][0]
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = [
