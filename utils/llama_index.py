@@ -14,7 +14,6 @@ from llama_index.core import (
     ServiceContext,
     set_global_service_context,
 )
-from llama_index.core.memory import ChatMemoryBuffer
 
 ###################################
 #
@@ -22,12 +21,12 @@ from llama_index.core.memory import ChatMemoryBuffer
 #
 ###################################
 
-
 def create_service_context(
     llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
+    chunk_overlap: int = 20,  # Llama-Index default is 1024
 ):
     """
     Create a service context with the specified language model and embedding model.
@@ -37,6 +36,7 @@ def create_service_context(
     - system_prompt (str, optional): System prompt to use when creating the LLM.
     - embed_model (str, optional): The embedding model to use for similarity search. Default is `BAAI/bge-large-en-v1.5`.
     - chunk_size (int, optional): The maximum number of tokens to consider at once. Default is 1024.
+    - chunk_overlap (int, optional): The amount of shared content between two consecutive chunks of data. Smaller = more precise. Default is 20.
 
     Returns:
     - A `ServiceContext` object with the specified settings.

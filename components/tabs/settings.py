@@ -82,6 +82,13 @@ def settings():
                 placeholder="1024",
                 value=st.session_state["chunk_size"],
             )
+            st.text_input(
+                "Chunk Overlap",
+                help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
+                key="chunk_overlap",
+                placeholder="20",
+                value=st.session_state["chunk_overlap"],
+            )
 
     st.subheader("Export Data")
     export_data_settings = st.container(border=True)
