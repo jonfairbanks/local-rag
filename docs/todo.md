@@ -17,7 +17,10 @@ Although not final, items are generally sorted from highest to lowest priority.
     - [ ] Websites
 - [x] Export Data (Chat History, ...)
 - [x] Docker Support
+- [ ] Extract Metadata and Load into Index
+- [ ] Parallelize Document Embeddings
 - [ ] Swap to OpenAI compatible endpoints
+- [ ] Allow Usage of Ollama hosted embeddings
 - [ ] Enable support for additional LLM backends
     - [ ] Local AI
     - [ ] TabbyAPI
@@ -31,6 +34,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [ ] Allow Users to Set LLM Settings
     - [x] System Prompt
     - [ ] Chat Mode
+    - [ ] Temperature
     - [x] top_k
     - [x] chunk_size
     - [ ] chunk_overlap
