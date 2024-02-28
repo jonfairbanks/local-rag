@@ -21,15 +21,16 @@ def set_initial_state():
         try:
             models = get_models()
             st.session_state["ollama_models"] = models
-        except Exception as err:
-            logs.log.warn(
-                f"Warning: Initial loading of Ollama models failed. You might be hosting Ollama somewhere other than localhost. -- {err}"
-            )
+        except Exception:
             st.session_state["ollama_models"] = []
             pass
 
     if "selected_model" not in st.session_state:
-        st.session_state["selected_model"] = st.session_state["ollama_models"][0]
+        try:
+            st.session_state["selected_model"] = st.session_state["ollama_models"][0]
+        except Exception:
+            st.session_state["selected_model"] = None
+            pass
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = [
