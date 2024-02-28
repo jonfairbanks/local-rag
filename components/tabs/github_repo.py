@@ -40,39 +40,45 @@ def github_repo():
                         st.session_state["selected_model"],
                         st.session_state["ollama_endpoint"],
                     )
+                    st.session_state['llm'] = llm
                     st.caption("✔️ LLM Initialized")
 
                     # resp = llm.complete("Hello!")
                     # print(resp)
+                except Exception as err:
+                    logs.log.error(f"Failed to setup LLM: {err}")
+                    error = err
+                
+                ####################################
+                # Determine embedding model to use #
+                ####################################
 
-                    # Determine embedding model to use
+                embedding_model = st.session_state["embedding_model"]
+                hf_embedding_model = None
 
-                    embedding_model = st.session_state["embedding_model"]
-                    hf_embedding_model = None
+                if embedding_model == None:
+                    # logs.log.info("No embedding model set; using defaults...")
+                    hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
-                    if embedding_model == None:
-                        logs.log.info("No embedding model set; using defaults...")
-                        hf_embedding_model = "BAAI/bge-large-en-v1.5"
+                if embedding_model == "Default (bge-large-en-v1.5)":
+                    # logs.log.info("Using default embedding model...")
+                    hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
-                    if embedding_model == "Default (bge-large-en-v1.5)":
-                        logs.log.info("Using default embedding model...")
-                        hf_embedding_model = "BAAI/bge-large-en-v1.5"
+                if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
+                    # logs.log.info("Using the Salesforce embedding model; RIP yer VRAM...")
+                    hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
 
-                    if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
-                        logs.log.info(
-                            "Using the Salesforce embedding model; RIP yer VRAM..."
-                        )
-                        hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
+                if embedding_model == "Other":
+                    # logs.log.info("Using a user-provided embedding model...")
+                    hf_embedding_model = st.session_state["other_embedding_model"]
 
-                    if embedding_model == "Other":
-                        logs.log.info("Using a user-provided embedding model...")
-                        hf_embedding_model = st.session_state["other_embedding_model"]
-
-                    service_context = llama_index.create_service_context(
-                        llm,
+                try:
+                    llama_index.create_service_context(
+                        st.session_state["llm"],
                         st.session_state["system_prompt"],
                         hf_embedding_model,
                         st.session_state["chunk_size"],
+                        # st.session_state["chunk_overlap"],
                     )
                     st.caption("✔️ Context Created")
                 except Exception as err:
@@ -97,7 +103,10 @@ def github_repo():
                 ###########################################
 
                 try:
-                    llama_index.create_query_engine(documents, service_context)
+                    llama_index.create_query_engine(
+                        st.session_state["documents"], 
+                        st.session_state["service_context"]
+                    )
                     st.caption("✔️ Created File Index")
                 except Exception as err:
                     logs.log.error(f"Index Creation Error: {err}")

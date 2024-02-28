@@ -21,8 +21,9 @@ from llama_index.core import (
 #
 ###################################
 
+@st.cache_resource(show_spinner=False)
 def create_service_context(
-    llm,  # TODO: Determine type
+    _llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
@@ -42,18 +43,22 @@ def create_service_context(
     - A `ServiceContext` object with the specified settings.
     """
     formatted_embed_model = f"local:{embed_model}"
-    service_context = ServiceContext.from_defaults(
-        llm=llm,
-        system_prompt=system_prompt,
-        embed_model=formatted_embed_model,
-        chunk_size=int(chunk_size),
-    )
-
-    # Note: this may be redundant since service_context is returned
-    set_global_service_context(service_context)
-
-    return service_context
-
+    try:
+        service_context = ServiceContext.from_defaults(
+            llm=_llm,
+            system_prompt=system_prompt,
+            embed_model=formatted_embed_model,
+            chunk_size=int(chunk_size),
+            # chunk_overlap=int(chunk_overlap),
+        )
+        st.session_state['service_context'] = service_context
+        # Note: this may be redundant since service_context is returned
+        set_global_service_context(service_context)
+        return service_context
+    except Exception as e:
+        logs.log.error(f"Failed to create service_context: {e}")
+        Exception(f"Failed to create service_context: {e}") # TODO: Redundant?
+        
 
 ###################################
 #
@@ -61,7 +66,7 @@ def create_service_context(
 #
 ###################################
 
-
+@st.cache_resource(show_spinner=False)
 def load_documents(data_dir: str):
     """
     Creates a data index from documents stored in a directory.
@@ -93,8 +98,8 @@ def load_documents(data_dir: str):
 #
 ###################################
 
-
-def create_query_engine(documents, service_context):
+@st.cache_resource(show_spinner=False)
+def create_query_engine(_documents, _service_context):
     """
     Create a query engine from a set of documents.
 
@@ -115,12 +120,12 @@ def create_query_engine(documents, service_context):
     """
     try:
         index = VectorStoreIndex.from_documents(
-            documents=documents, service_context=service_context, show_progress=True
+            documents=_documents, service_context=_service_context, show_progress=True
         )
 
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],
-            service_context=service_context,
+            service_context=_service_context,
             streaming=True,
         )
 

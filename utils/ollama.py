@@ -16,7 +16,6 @@ from llama_index.llms.ollama import Ollama
 #
 ###################################
 
-
 def create_client(host: str):
     """
     Creates a client for interacting with the Ollama API.
@@ -37,7 +36,7 @@ def create_client(host: str):
 #
 ###################################
 
-
+@st.cache_data(show_spinner=False)
 def get_models():
     """
     Retrieves a list of available language models from the Ollama server.
@@ -60,7 +59,7 @@ def get_models():
 #
 ###################################
 
-
+@st.cache_data(show_spinner=False)
 def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> Ollama:
     """
     Create an instance of the Ollama language model.
@@ -75,11 +74,11 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
     """
     try:
         llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
+        return llm
     except Exception as e:
         logs.log.error(f"Error creating Ollama language model: {e}")
         return None
-    else:
-        return llm
+        
 
 
 ###################################
@@ -87,7 +86,6 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
 # Chat (no context)
 #
 ###################################
-
 
 def chat(prompt: str):
     """
@@ -115,7 +113,6 @@ def chat(prompt: str):
 # Document Chat (with context)
 #
 ###################################
-
 
 def context_chat(prompt: str, query_engine):
     """

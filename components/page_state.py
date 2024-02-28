@@ -53,11 +53,20 @@ def set_initial_state():
     # Llama-Index #
     ###############
 
+    if "llm" not in st.session_state:
+        st.session_state["llm"] = None
+
     if "documents" not in st.session_state:
         st.session_state["documents"] = None
 
     if "query_engine" not in st.session_state:
         st.session_state["query_engine"] = None
+
+    if "service_context" not in st.session_state:
+        st.session_state["service_context"] = None
+
+    if "chat_mode" not in st.session_state:
+        st.session_state["chat_mode"] = "best"
 
     #####################
     # Advanced Settings #
@@ -72,9 +81,7 @@ def set_initial_state():
         )
 
     if "top_k" not in st.session_state:
-        st.session_state["top_k"] = (
-            3  # Default is 2; increasing to 5 will result in more documents being retrieved
-        )
+        st.session_state["top_k"] = (3)
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = None
