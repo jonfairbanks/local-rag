@@ -1,10 +1,12 @@
 import os
+import shutil
 
 import streamlit as st
 
 import utils.helpers as func
 import utils.ollama as ollama
 import utils.llama_index as llama_index
+import utils.logs as logs
 
 from components.tabs.github_repo import github_repo
 
@@ -138,6 +140,18 @@ def file_upload():
                 llama_index.create_query_engine(documents, service_context)
             except Exception as err:
                 logs.log.error(f"Index Creation Error: {err}")
+                error = err
+
+            #####################
+            # Remove data files #
+            #####################
+
+            try:
+                save_dir = os.getcwd() + "/data"
+                shutil.rmtree(save_dir)
+                st.caption("✔️ Removed Temp Files")
+            except Exception as err:
+                logs.log.error(f"Failed to delete data files: {err}")
                 error = err
 
             #####################
