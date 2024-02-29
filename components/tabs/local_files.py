@@ -45,6 +45,7 @@ def local_files():
                     "pdf",
                     "ppt",
                     "pptx",
+                    "txt"
                 ),
                 disabled=True,
             )
