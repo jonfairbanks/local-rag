@@ -8,8 +8,6 @@ services:
       - TZ=America/Los_Angeles
     ports:
       - '8501:8501/tcp'
-    volumes:
-      - ./data:/home/appuser/data:rw
     deploy:
         resources:
           reservations:
@@ -17,6 +15,3 @@ services:
               - driver: nvidia
                 device_ids: ['0']
                 capabilities: [gpu]
-
-volumes:
- local-rag: {}
