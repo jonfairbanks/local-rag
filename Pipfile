@@ -11,6 +11,7 @@ llama-index-llms-ollama = "*"
 llama-index-embeddings-huggingface = "*"
 pycryptodome = "*"
 nbconvert = "*"
+pyexiftool = "*"
 
 [dev-packages]
 
