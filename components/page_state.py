@@ -11,6 +11,9 @@ def set_initial_state():
     # General #
     ###########
 
+    if 'sidebar_state' not in st.session_state:
+        st.session_state['sidebar_state'] = 'expanded'
+
     if "ollama_endpoint" not in st.session_state:
         st.session_state["ollama_endpoint"] = "http://localhost:11434"
 

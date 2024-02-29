@@ -15,13 +15,12 @@ def generate_welcome_message(msg):
         time.sleep(0.025)  # This is blocking :(
         yield char
 
+### Setup Initial State
+set_initial_state()
 
 ### Page Setup
 set_page_config()
 set_page_header()
-
-### Setup Initial State
-set_initial_state()
 
 for msg in st.session_state["messages"]:
     st.chat_message(msg["role"]).write(msg["content"])

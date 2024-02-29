@@ -28,6 +28,7 @@ def create_client(host: str):
         - ollama.Client: An instance of the Ollama client.
     """
     client = ollama.Client(host=host)
+    logs.log.info("Ollama chat client created successfully")
     return client
 
 
@@ -51,6 +52,7 @@ def get_models():
     models = []
     for model in data["models"]:
         models.append(model["name"])
+    logs.log.info("Ollama models loaded successuflly")
     st.session_state["ollama_models"] = models
     return models
 
@@ -77,6 +79,7 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
     """
     try:
         llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
+        logs.log.info("Ollama LLM instance created successfully")
         return llm
     except Exception as e:
         logs.log.error(f"Error creating Ollama language model: {e}")

@@ -52,6 +52,7 @@ def create_service_context(
             chunk_size=int(chunk_size),
             # chunk_overlap=int(chunk_overlap),
         )
+        logs.log.info(f"Service Context created successfully")
         st.session_state["service_context"] = service_context
         # Note: this may be redundant since service_context is returned
         set_global_service_context(service_context)
@@ -83,15 +84,16 @@ def load_documents(data_dir: str):
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
-        # logs.log.info(f"Loaded {len(documents):,} documents")
+        logs.log.info(f"Loaded {len(documents):,} documents from files")
         return documents
     except Exception as err:
         logs.log.error(f"Error creating data index: {err}")
         return None
     finally:
         for file in os.scandir(data_dir):
-            if file.is_file() and not file.name.startswith("."):
+            if file.is_file() and not file.name.startswith(".gitkeep"): # TODO: Confirm syntax here
                 os.remove(file.path)
+        logs.log.info(f"Document loading complete; removing local file(s)")
 
 
 ###################################
@@ -126,11 +128,15 @@ def create_query_engine(_documents, _service_context):
             documents=_documents, service_context=_service_context, show_progress=True
         )
 
+        logs.log.info("Index created from loaded documents successfully")
+
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],
             service_context=_service_context,
             streaming=True,
         )
+
+        logs.log.info("Query Engine created successfully")
 
         st.session_state["query_engine"] = query_engine
 

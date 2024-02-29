@@ -1,8 +1,11 @@
 import os
+import json
 import requests
 import subprocess
 
 import streamlit as st
+
+from exiftool import ExifToolHelper
 
 import utils.logs as logs
 
@@ -24,10 +27,12 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
     try:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
+            logs.log.info(f"Directory {save_dir} did not exist so creating it")
         with open(os.path.join(save_dir, uploaded_file.name), "wb") as f:
             f.write(uploaded_file.getbuffer())
+            logs.log.info(f"Upload {uploaded_file.name} saved to disk")
     except Exception as e:
-        logs.log.info(f"Error saving upload to disk: {e}")
+        logs.log.error(f"Error saving upload to disk: {e}")
 
 
 ###################################
@@ -75,3 +80,20 @@ def clone_github_repo(repo: str):
     else:
         Exception(f"Failed to process GitHub repo {st.session_state['github_repo']}")
         return False
+
+
+###################################
+#
+# Extract File Metadata
+#
+###################################
+    
+
+def get_file_metadata(file_path):
+    """Returns a dictionary containing various metadata for the specified file."""    
+    try:
+        with ExifToolHelper() as et:
+            for d in et.get_metadata(file_path):
+                return json.dumps(d, indent=2)
+    except Exception:
+        pass
