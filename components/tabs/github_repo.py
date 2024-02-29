@@ -57,19 +57,15 @@ def github_repo():
                 hf_embedding_model = None
 
                 if embedding_model == None:
-                    # logs.log.info("No embedding model set; using defaults...")
                     hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
                 if embedding_model == "Default (bge-large-en-v1.5)":
-                    # logs.log.info("Using default embedding model...")
                     hf_embedding_model = "BAAI/bge-large-en-v1.5"
 
                 if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
-                    # logs.log.info("Using the Salesforce embedding model; RIP yer VRAM...")
                     hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
 
                 if embedding_model == "Other":
-                    # logs.log.info("Using a user-provided embedding model...")
                     hf_embedding_model = st.session_state["other_embedding_model"]
 
                 try:
