@@ -115,6 +115,8 @@ def local_files():
             except Exception as err:
                 logs.log.error(f"Setting up Service Context failed: {err}")
                 error = err
+                st.exception(error)
+                st.stop()
 
             #######################################
             # Load files from the data/ directory #
@@ -127,6 +129,8 @@ def local_files():
             except Exception as err:
                 logs.log.error(f"Document Load Error: {err}")
                 error = err
+                st.exception(error)
+                st.stop()
 
             ###########################################
             # Create an index from ingested documents #
@@ -140,6 +144,8 @@ def local_files():
             except Exception as err:
                 logs.log.error(f"Index Creation Error: {err}")
                 error = err
+                st.exception(error)
+                st.stop()
 
             #####################
             # Remove data files #
@@ -152,6 +158,8 @@ def local_files():
             except Exception as err:
                 logs.log.error(f"Failed to delete data files: {err}")
                 error = err
+                st.exception(error)
+                st.stop()
 
             #####################
             # Show Final Status #
