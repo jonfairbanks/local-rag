@@ -46,15 +46,18 @@ def set_initial_state():
             }
         ]
 
-    ######################
-    #  Files & Documents #
-    ######################
+    ################################
+    #  Files, Documents & Websites #
+    ################################
 
     if "file_list" not in st.session_state:
         st.session_state["file_list"] = []
 
     if "github_repo" not in st.session_state:
         st.session_state["github_repo"] = None
+
+    if "websites" not in st.session_state:
+        st.session_state["websites"] = []
 
     ###############
     # Llama-Index #
