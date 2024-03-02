@@ -128,8 +128,10 @@ def create_query_engine(_documents, _service_context):
 
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],
+            response_mode=st.session_state["chat_mode"],
             service_context=_service_context,
             streaming=True,
+            # verbose=True, # Broken?
         )
 
         st.session_state["query_engine"] = query_engine
