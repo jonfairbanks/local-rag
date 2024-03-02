@@ -8,6 +8,18 @@ import utils.ollama as ollama
 import utils.llama_index as llama_index
 import utils.logs as logs
 
+supported_files = (
+    "csv",
+    "docx",
+    "epub",
+    "ipynb",
+    "json",
+    "md",
+    "pdf",
+    "ppt",
+    "pptx",
+    "txt",
+)
 
 def local_files():
     # Force users to confirm Settings before uploading files
@@ -15,18 +27,7 @@ def local_files():
         uploaded_files = st.file_uploader(
             "Select Files",
             accept_multiple_files=True,
-            type=(
-                "csv",
-                "docx",
-                "epub",
-                "ipynb",
-                "json",
-                "md",
-                "pdf",
-                "ppt",
-                "pptx",
-                "txt",
-            ),
+            type=supported_files,
         )
     else:
         st.warning("Please configure Ollama settings before proceeding!", icon="⚠️")
@@ -35,18 +36,7 @@ def local_files():
             uploaded_files = st.file_uploader(
                 "Select Files",
                 accept_multiple_files=True,
-                type=(
-                    "csv",
-                    "docx",
-                    "epub",
-                    "ipynb",
-                    "json",
-                    "md",
-                    "pdf",
-                    "ppt",
-                    "pptx",
-                    "txt"
-                ),
+                type=supported_files,
                 disabled=True,
             )
 
