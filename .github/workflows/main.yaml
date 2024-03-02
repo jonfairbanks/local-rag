@@ -47,7 +47,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BRANCHES: "master,main"
           DEFAULT_BUMP: "patch"
-          INITIAL_VERSION: "1.1.1"
+          INITIAL_VERSION: "v1.3.1"
+          WITH_V: true
       - name: Log new version
         id: log-version
         run: echo "New version -- ${{ steps.bump-tag.outputs.new_tag }}"

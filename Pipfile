@@ -13,6 +13,10 @@ pycryptodome = "*"
 nbconvert = "*"
 pyexiftool = "*"
 numba = "*"
+llama-index-readers-web = "*"
+html2text = "*"
+streamlit-tags = "*"
+streamlit-extras = "*"
 
 [dev-packages]
 
