@@ -47,7 +47,7 @@ def setup_embedding_model(
 # TODO: Migrate to LlamaIndex.Settings: https://docs.llamaindex.ai/en/stable/module_guides/supporting_modules/service_context_migration.html
 
 def create_service_context(
-    _llm,  # TODO: Determine type
+    llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
@@ -57,7 +57,7 @@ def create_service_context(
     try:
         embedding_model = setup_embedding_model(embed_model)
         service_context = ServiceContext.from_defaults(
-            llm=_llm,
+            llm=llm,
             system_prompt=system_prompt,
             embed_model=formatted_embed_model,
             chunk_size=int(chunk_size),
