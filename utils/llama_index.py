@@ -4,10 +4,8 @@ import streamlit as st
 
 import utils.logs as logs
 
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.embeddings.text_embeddings_inference import (
-    TextEmbeddingsInference,
-)
+from numba import cuda
+from llama_index.embeddings.huggingface import ( HuggingFaceEmbedding )
 
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
@@ -32,11 +30,14 @@ def setup_embedding_model(
     timeout: int = 60, 
     embed_batch_size: int = 10
 ):
+    device = 'cpu' if not cuda.is_available() else 'cuda'
     embed_model = HuggingFaceEmbedding(
         model_name=model,
         timeout=timeout,
         embed_batch_size=embed_batch_size,
+        device=device
     )
+    logs.log.info(f"Embedding model created successfully")
     return embed_model
 
 
@@ -58,19 +59,6 @@ def create_service_context(
     chunk_size: int = 1024,  # Llama-Index default is 1024
     chunk_overlap: int = 200,  # Llama-Index default is 200
 ):
-    """
-    Create a service context with the specified language model and embedding model.
-
-    Parameters:
-    - llm (TODO: Determine type): The Llama-Index LLM instance to use for generation.
-    - system_prompt (str, optional): System prompt to use when creating the LLM.
-    - embed_model (str, optional): The embedding model to use for similarity search. Default is `BAAI/bge-large-en-v1.5`.
-    - chunk_size (int, optional): The maximum number of tokens to consider at once. Default is 1024.
-    - chunk_overlap (int, optional): The amount of shared content between two consecutive chunks of data. Smaller = more precise. Default is 20.
-
-    Returns:
-    - A `ServiceContext` object with the specified settings.
-    """
     formatted_embed_model = f"local:{embed_model}"
     try:
         embedding_model = setup_embedding_model(embed_model, embed_timeout, embed_batch_size)
@@ -102,16 +90,6 @@ def create_service_context(
 
 @st.cache_resource(show_spinner=False)
 def load_documents(data_dir: str):
-    """
-    Creates a data index from documents stored in a directory.
-
-    Parameters:
-        - data_dir: Directory to load files from for embedding
-
-    Returns:
-        - TODO: FIX -- VectorStoreIndex: An index containing vector representations of documents in the specified directory.
-        - None: If an exception occurs during the creation of the data index.
-    """
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
@@ -136,24 +114,6 @@ def load_documents(data_dir: str):
 
 @st.cache_resource(show_spinner=False)
 def create_query_engine(_documents, _service_context):
-    """
-    Create a query engine from a set of documents.
-
-    This function creates a vector database index using the given documents and
-    service context, and then returns a query engine that can be used to perform
-    natural language queries on the index.
-
-    Parameters:
-        - documents (VectorStoreIndex): A list of Document objects containing the
-        raw text data to be indexed.
-        - service_context (ServiceContext): A ServiceContext object providing any
-        necessary configuration or authentication information for the underlying
-        index implementation.
-
-    Returns:
-        - query_engine (QueryEngine): A QueryEngine instance that can be used to
-        perform natural language queries on the indexed documents.
-    """
     try:
         index = VectorStoreIndex.from_documents(
             documents=_documents, service_context=_service_context, show_progress=True
