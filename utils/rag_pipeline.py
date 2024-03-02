@@ -94,7 +94,7 @@ def rag_pipeline(uploaded_files: list = None):
             save_dir = os.getcwd() + "/data"
             documents = llama_index.load_documents(save_dir)
             st.session_state["documents"] = documents
-            st.caption("✔️ Processed File Data")
+            st.caption("✔️ Data Processed")
         except Exception as err:
             logs.log.error(f"Document Load Error: {str(err)}")
             error = err
@@ -121,13 +121,13 @@ def rag_pipeline(uploaded_files: list = None):
     # Remove data files #
     #####################
 
-    try:
-        save_dir = os.getcwd() + "/data"
-        shutil.rmtree(save_dir)
-        st.caption("✔️ Removed Temp Files")
-    except Exception as err:
-        logs.log.error(f"Failed to delete data files, you may want to clean-up manually: {str(err)}")
-        error = err
-        pass
+    if len(st.session_state['file_list']) > 0:
+        try:
+            save_dir = os.getcwd() + "/data"
+            shutil.rmtree(save_dir)
+            st.caption("✔️ Removed Temp Files")
+        except Exception as err:
+            logs.log.warning(f"Unable to delete data files, you may want to clean-up manually: {str(err)}")
+            pass
     
-    return error
+    return error # If no errors occurred, None is returned
