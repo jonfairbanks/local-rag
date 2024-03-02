@@ -26,15 +26,12 @@ from llama_index.core import (
 
 @st.cache_resource(show_spinner=False)
 def setup_embedding_model(
-    model: str, 
-    timeout: int = 60, 
-    embed_batch_size: int = 10
+    model: str,
 ):
     device = 'cpu' if not cuda.is_available() else 'cuda'
     embed_model = HuggingFaceEmbedding(
         model_name=model,
-        timeout=timeout,
-        embed_batch_size=embed_batch_size,
+        # embed_batch_size=25, // TODO: Turning this on creates chaos, but has the potential to improve performance
         device=device
     )
     logs.log.info(f"Embedding model created successfully")

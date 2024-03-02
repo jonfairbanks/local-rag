@@ -12,6 +12,7 @@ llama-index-embeddings-huggingface = "*"
 pycryptodome = "*"
 nbconvert = "*"
 pyexiftool = "*"
+numba = "*"
 
 [dev-packages]
 
