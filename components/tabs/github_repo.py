@@ -24,7 +24,8 @@ def github_repo():
             "Process",
             on_click=func.clone_github_repo,
             args=(st.session_state["github_repo"],),
-        )  # TODO: Should this be with st.button?
+            key="process_github",
+        )
 
         with st.spinner("Processing..."):
             if repo_processed is True:

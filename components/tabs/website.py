@@ -63,7 +63,7 @@ def website():
             st.caption(f"- {site}")
         st.write("")
 
-        process_button = st.button("Process")
+        process_button = st.button("Process", key="process_website")
         
         if process_button:
             documents = SimpleWebPageReader(html_to_text=True).load_data(
