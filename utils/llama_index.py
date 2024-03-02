@@ -126,4 +126,3 @@ def create_query_engine(_documents, _service_context):
         return query_engine
     except Exception as e:
         logs.log.error(f"Error when creating Query Engine: {e}")
-        return
