@@ -49,7 +49,6 @@ def setup_embedding_model(
 
 # TODO: Migrate to LlamaIndex.Settings: https://docs.llamaindex.ai/en/stable/module_guides/supporting_modules/service_context_migration.html
 
-@st.cache_resource(show_spinner=False)
 def create_service_context(
     _llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
@@ -88,7 +87,6 @@ def create_service_context(
 ###################################
 
 
-@st.cache_resource(show_spinner=False)
 def load_documents(data_dir: str):
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
