@@ -4,6 +4,8 @@ import streamlit as st
 
 import utils.logs as logs
 
+from numba import cuda
+from llama_index.embeddings.huggingface import ( HuggingFaceEmbedding )
 
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
@@ -15,38 +17,47 @@ from llama_index.core import (
     set_global_service_context,
 )
 
+
+###################################
+#
+# Setup Embedding Model
+#
+###################################
+
+@st.cache_resource(show_spinner=False)
+def setup_embedding_model(
+    model: str,
+):
+    device = 'cpu' if not cuda.is_available() else 'cuda'
+    embed_model = HuggingFaceEmbedding(
+        model_name=model,
+        # embed_batch_size=25, // TODO: Turning this on creates chaos, but has the potential to improve performance
+        device=device
+    )
+    logs.log.info(f"Embedding model created successfully")
+    return embed_model
+
+
 ###################################
 #
 # Create Service Context
 #
 ###################################
 
+# TODO: Migrate to LlamaIndex.Settings: https://docs.llamaindex.ai/en/stable/module_guides/supporting_modules/service_context_migration.html
 
-@st.cache_resource(show_spinner=False)
 def create_service_context(
-    _llm,  # TODO: Determine type
+    llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
-    chunk_overlap: int = 20,  # Llama-Index default is 1024
+    chunk_overlap: int = 200,  # Llama-Index default is 200
 ):
-    """
-    Create a service context with the specified language model and embedding model.
-
-    Parameters:
-    - llm (TODO: Determine type): The Llama-Index LLM instance to use for generation.
-    - system_prompt (str, optional): System prompt to use when creating the LLM.
-    - embed_model (str, optional): The embedding model to use for similarity search. Default is `BAAI/bge-large-en-v1.5`.
-    - chunk_size (int, optional): The maximum number of tokens to consider at once. Default is 1024.
-    - chunk_overlap (int, optional): The amount of shared content between two consecutive chunks of data. Smaller = more precise. Default is 20.
-
-    Returns:
-    - A `ServiceContext` object with the specified settings.
-    """
     formatted_embed_model = f"local:{embed_model}"
     try:
+        embedding_model = setup_embedding_model(embed_model)
         service_context = ServiceContext.from_defaults(
-            llm=_llm,
+            llm=llm,
             system_prompt=system_prompt,
             embed_model=formatted_embed_model,
             chunk_size=int(chunk_size),
@@ -54,8 +65,10 @@ def create_service_context(
         )
         logs.log.info(f"Service Context created successfully")
         st.session_state["service_context"] = service_context
+        
         # Note: this may be redundant since service_context is returned
         set_global_service_context(service_context)
+
         return service_context
     except Exception as e:
         logs.log.error(f"Failed to create service_context: {e}")
@@ -69,18 +82,7 @@ def create_service_context(
 ###################################
 
 
-@st.cache_resource(show_spinner=False)
 def load_documents(data_dir: str):
-    """
-    Creates a data index from documents stored in a directory.
-
-    Parameters:
-        - data_dir: Directory to load files from for embedding
-
-    Returns:
-        - TODO: FIX -- VectorStoreIndex: An index containing vector representations of documents in the specified directory.
-        - None: If an exception occurs during the creation of the data index.
-    """
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
@@ -88,7 +90,6 @@ def load_documents(data_dir: str):
         return documents
     except Exception as err:
         logs.log.error(f"Error creating data index: {err}")
-        return None
     finally:
         for file in os.scandir(data_dir):
             if file.is_file() and not file.name.startswith(".gitkeep"): # TODO: Confirm syntax here
@@ -98,49 +99,45 @@ def load_documents(data_dir: str):
 
 ###################################
 #
+# Create Document Index
+#
+###################################
+
+@st.cache_data(show_spinner=False)
+def create_index(_documents, _service_context):
+    index = VectorStoreIndex.from_documents(
+        documents=_documents, service_context=_service_context, show_progress=True
+    )
+
+    logs.log.info("Index created from loaded documents successfully")
+
+    return index
+
+
+###################################
+#
 # Create Query Engine
 #
 ###################################
 
 
-@st.cache_resource(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def create_query_engine(_documents, _service_context):
-    """
-    Create a query engine from a set of documents.
-
-    This function creates a vector database index using the given documents and
-    service context, and then returns a query engine that can be used to perform
-    natural language queries on the index.
-
-    Parameters:
-        - documents (VectorStoreIndex): A list of Document objects containing the
-        raw text data to be indexed.
-        - service_context (ServiceContext): A ServiceContext object providing any
-        necessary configuration or authentication information for the underlying
-        index implementation.
-
-    Returns:
-        - query_engine (QueryEngine): A QueryEngine instance that can be used to
-        perform natural language queries on the indexed documents.
-    """
     try:
-        index = VectorStoreIndex.from_documents(
-            documents=_documents, service_context=_service_context, show_progress=True
-        )
-
-        logs.log.info("Index created from loaded documents successfully")
+        index = create_index(_documents, _service_context)
 
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],
+            response_mode=st.session_state["chat_mode"],
             service_context=_service_context,
             streaming=True,
+            # verbose=True, # Broken?
         )
 
-        logs.log.info("Query Engine created successfully")
-
         st.session_state["query_engine"] = query_engine
+
+        logs.log.info("Query Engine created successfully")
 
         return query_engine
     except Exception as e:
         logs.log.error(f"Error when creating Query Engine: {e}")
-        return

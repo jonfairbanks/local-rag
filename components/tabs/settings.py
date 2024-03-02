@@ -45,13 +45,14 @@ def settings():
             st.selectbox(
                 "Chat Mode",
                 (
-                    "best",
-                    "condense_question",
-                    "context",
-                    "condense_plus_context",
-                    "react",
+                    "compact",
+                    "refine",
+                    "tree_summarize",
+                    "simple_summarize",
+                    "accumulate",
+                    "compact_accumulate",
                 ),
-                help="Sets the [Llama-Index Chat Mode](https://docs.llamaindex.ai/en/stable/module_guides/deploying/chat_engines/usage_pattern.html#available-chat-modes) used when creating the Query Engine.",
+                help="Sets the [Llama Index Query Engine chat mode](https://github.com/run-llama/llama_index/blob/main/docs/module_guides/deploying/query_engine/response_modes.md) used when creating the Query Engine. Default: `compact`.",
                 key="chat_mode",
                 disabled=True,
             )

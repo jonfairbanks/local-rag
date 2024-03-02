@@ -39,7 +39,6 @@ def create_client(host: str):
 ###################################
 
 
-@st.cache_data(show_spinner=False)
 def get_models():
     """
     Retrieves a list of available language models from the Ollama server.

@@ -21,10 +21,11 @@ def github_repo():
 
         repo_processed = None
         repo_processed = st.button(
-            "Process Repo",
+            "Process",
             on_click=func.clone_github_repo,
             args=(st.session_state["github_repo"],),
-        )  # TODO: Should this be with st.button?
+            key="process_github",
+        )
 
         with st.spinner("Processing..."):
             if repo_processed is True:
@@ -48,6 +49,8 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Failed to setup LLM: {err}")
                     error = err
+                    st.exception(error)
+                    st.stop()
 
                 ####################################
                 # Determine embedding model to use #
@@ -80,6 +83,8 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Setting up Service Context failed: {err}")
                     error = err
+                    st.exception(error)
+                    st.stop()
 
                 #######################################
                 # Load files from the data/ directory #
@@ -93,6 +98,8 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Document Load Error: {err}")
                     error = err
+                    st.exception(error)
+                    st.stop()
 
                 ###########################################
                 # Create an index from ingested documents #
@@ -107,6 +114,8 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Index Creation Error: {err}")
                     error = err
+                    st.exception(error)
+                    st.stop()
 
                 #####################
                 # Remove data files #
@@ -119,6 +128,8 @@ def github_repo():
                 except Exception as err:
                     logs.log.error(f"Failed to delete data files: {err}")
                     error = err
+                    st.exception(error)
+                    st.stop()
 
                 #####################
                 # Show Final Status #

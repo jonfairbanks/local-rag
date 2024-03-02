@@ -3,3 +3,4 @@ data/*
 *.log
 .cache/*
 .nv/*
+.DS_Store

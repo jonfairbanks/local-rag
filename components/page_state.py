@@ -30,7 +30,10 @@ def set_initial_state():
 
     if "selected_model" not in st.session_state:
         try:
-            st.session_state["selected_model"] = st.session_state["ollama_models"][0]
+            if("llama2:7b" in st.session_state["ollama_models"]):
+                st.session_state["selected_model"] = "llama2:7b" # Default to llama2:7b on initial load
+            else:
+                st.session_state["selected_model"] = st.session_state["ollama_models"][0] # If llama2:7b is not present, select the first model available
         except Exception:
             st.session_state["selected_model"] = None
             pass
@@ -43,15 +46,18 @@ def set_initial_state():
             }
         ]
 
-    ######################
-    #  Files & Documents #
-    ######################
+    ################################
+    #  Files, Documents & Websites #
+    ################################
 
     if "file_list" not in st.session_state:
         st.session_state["file_list"] = []
 
     if "github_repo" not in st.session_state:
         st.session_state["github_repo"] = None
+
+    if "websites" not in st.session_state:
+        st.session_state["websites"] = []
 
     ###############
     # Llama-Index #
@@ -70,7 +76,7 @@ def set_initial_state():
         st.session_state["service_context"] = None
 
     if "chat_mode" not in st.session_state:
-        st.session_state["chat_mode"] = "best"
+        st.session_state["chat_mode"] = "compact"
 
     #####################
     # Advanced Settings #

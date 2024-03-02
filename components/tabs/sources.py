@@ -5,9 +5,9 @@ from components.tabs.github_repo import github_repo
 from components.tabs.website import website
 
 
-def file_upload():
-    st.title("Directly import your files")
-    st.caption("Convert your files to embeddings for utilization during chat")
+def sources():
+    st.title("Directly import your data")
+    st.caption("Convert your data into embeddings for utilization during chat")
     st.write("")
 
     with st.expander("💻 &nbsp; **Local Files**", expanded=False):
