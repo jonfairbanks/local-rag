@@ -50,14 +50,12 @@ def create_service_context(
     _llm,  # TODO: Determine type
     system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
     embed_model: str = "BAAI/bge-large-en-v1.5",
-    embed_timeout: int = 60,
-    embed_batch_size: int = 10,
     chunk_size: int = 1024,  # Llama-Index default is 1024
     chunk_overlap: int = 200,  # Llama-Index default is 200
 ):
     formatted_embed_model = f"local:{embed_model}"
     try:
-        embedding_model = setup_embedding_model(embed_model, embed_timeout, embed_batch_size)
+        embedding_model = setup_embedding_model(embed_model)
         service_context = ServiceContext.from_defaults(
             llm=_llm,
             system_prompt=system_prompt,
@@ -92,7 +90,6 @@ def load_documents(data_dir: str):
         return documents
     except Exception as err:
         logs.log.error(f"Error creating data index: {err}")
-        return None
     finally:
         for file in os.scandir(data_dir):
             if file.is_file() and not file.name.startswith(".gitkeep"): # TODO: Confirm syntax here
