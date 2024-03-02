@@ -7,7 +7,7 @@ from components.tabs.settings import settings
 
 def sidebar():
     with st.sidebar:
-        tab1, tab2, tab3 = st.sidebar.tabs(["My Files", "Settings", "About"])
+        tab1, tab2, tab3 = st.sidebar.tabs(["Data Sources", "Settings", "About"])
 
         with tab1:
             sources()
