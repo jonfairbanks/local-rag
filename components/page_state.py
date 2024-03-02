@@ -73,7 +73,7 @@ def set_initial_state():
         st.session_state["service_context"] = None
 
     if "chat_mode" not in st.session_state:
-        st.session_state["chat_mode"] = "best"
+        st.session_state["chat_mode"] = "compact"
 
     #####################
     # Advanced Settings #
