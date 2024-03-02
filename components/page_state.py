@@ -30,7 +30,10 @@ def set_initial_state():
 
     if "selected_model" not in st.session_state:
         try:
-            st.session_state["selected_model"] = st.session_state["ollama_models"][0]
+            if("llama2:7b" in st.session_state["ollama_models"]):
+                st.session_state["selected_model"] = "llama2:7b" # Default to llama2:7b on initial load
+            else:
+                st.session_state["selected_model"] = st.session_state["ollama_models"][0]
         except Exception:
             st.session_state["selected_model"] = None
             pass
