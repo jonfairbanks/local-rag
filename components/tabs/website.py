@@ -5,6 +5,13 @@ import utils.rag_pipeline as rag
 from llama_index.readers.web import SimpleWebPageReader
 from urllib.parse import urlparse
 
+def ensure_https(url):
+    parsed = urlparse(url)
+
+    if not bool(parsed.scheme):
+        return f"https://{url}"
+
+    return url
 
 def website():
     # if st.session_state["selected_model"] is not None:
@@ -37,13 +44,7 @@ def website():
 
     # st.write(css_example, unsafe_allow_html=True)
 
-    def ensure_https(url):
-        parsed = urlparse(url)
-    
-        if not bool(parsed.scheme):
-            return f"https://{url}"
-    
-        return url
+
 
     st.write("Enter a Website")
     col1, col2 = st.columns([1,.2])
