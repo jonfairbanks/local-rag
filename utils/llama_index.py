@@ -119,9 +119,9 @@ def create_query_engine(_documents, _service_context):
             streaming=True,
         )
 
-        logs.log.info("Query Engine created successfully")
-
         st.session_state["query_engine"] = query_engine
+
+        logs.log.info("Query Engine created successfully")
 
         return query_engine
     except Exception as e:
