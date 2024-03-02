@@ -21,7 +21,7 @@ def github_repo():
 
         repo_processed = None
         repo_processed = st.button(
-            "Process Repo",
+            "Process",
             on_click=func.clone_github_repo,
             args=(st.session_state["github_repo"],),
         )  # TODO: Should this be with st.button?
