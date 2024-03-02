@@ -99,6 +99,23 @@ def load_documents(data_dir: str):
 
 ###################################
 #
+# Create Document Index
+#
+###################################
+
+@st.cache_data(show_spinner=False)
+def create_index(_documents, _service_context):
+    index = VectorStoreIndex.from_documents(
+        documents=_documents, service_context=_service_context, show_progress=True
+    )
+
+    logs.log.info("Index created from loaded documents successfully")
+
+    return index
+
+
+###################################
+#
 # Create Query Engine
 #
 ###################################
@@ -107,11 +124,7 @@ def load_documents(data_dir: str):
 @st.cache_data(show_spinner=False)
 def create_query_engine(_documents, _service_context):
     try:
-        index = VectorStoreIndex.from_documents(
-            documents=_documents, service_context=_service_context, show_progress=True
-        )
-
-        logs.log.info("Index created from loaded documents successfully")
+        index = create_index(_documents, _service_context)
 
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],
