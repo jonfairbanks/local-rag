@@ -86,7 +86,7 @@ def rag_pipeline(uploaded_files: list = None):
     #######################################
 
     # if documents already exists in state
-    if len(st.session_state["documents"]) > 0:
+    if st.session_state["documents"] is not None and len(st.session_state["documents"]) > 0:
         logs.log.info("Documents are already available; skipping document loading")
         st.caption("✔️ Processed File Data")
     else:
