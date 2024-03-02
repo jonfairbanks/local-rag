@@ -104,7 +104,7 @@ def load_documents(data_dir: str):
 ###################################
 
 
-@st.cache_resource(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def create_query_engine(_documents, _service_context):
     try:
         index = VectorStoreIndex.from_documents(
