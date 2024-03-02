@@ -10,6 +10,16 @@ def set_page_config():
         menu_items={
             'Get Help': 'https://github.com/jonfairbanks/local-rag/discussions',
             'Report a bug': "https://github.com/jonfairbanks/local-rag/issues",
-            'About': None
         }
+    )
+
+    # Remove the Streamlit `Deploy` button from the Header
+    st.markdown(
+    r"""
+    <style>
+    .stDeployButton {
+            visibility: hidden;
+        }
+    </style>
+    """, unsafe_allow_html=True
     )
