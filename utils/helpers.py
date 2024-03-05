@@ -23,6 +23,12 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
     Args:
         uploaded_file (BytesIO): The uploaded file content.
         save_dir (str): The directory where the file will be saved.
+
+    Returns:
+        None
+
+    Raises:
+        Exception: If there is an error saving the file to disk.
     """
     try:
         if not os.path.exists(save_dir):
@@ -43,6 +49,18 @@ def save_uploaded_file(uploaded_file: bytes, save_dir: str):
 
 
 def validate_github_repo(repo: str):
+    """
+    Validates whether a GitHub repository exists.
+
+    Args:
+        repo (str): The name of the GitHub repository.
+
+    Returns:
+        True if the repository exists, False otherwise.
+
+    Raises:
+        Exception: If there is an error validating the repository.
+    """
     repo_endpoint = "https://github.com/" + repo + ".git"
     resp = requests.head(repo_endpoint)
     if resp.status_code() == 200:
@@ -62,8 +80,14 @@ def clone_github_repo(repo: str):
     """
     Clones a GitHub repository.
 
-    Parameters:
+    Args:
         repo (str): The name of the GitHub repository.
+
+    Returns:
+        True if the repository is cloned successfully, False otherwise.
+
+    Raises:
+        Exception: If there is an error cloning the repository.
     """
     repo_endpoint = "https://github.com/" + repo + ".git"
     if repo_endpoint is not None:
@@ -90,7 +114,18 @@ def clone_github_repo(repo: str):
     
 
 def get_file_metadata(file_path):
-    """Returns a dictionary containing various metadata for the specified file."""    
+    """
+    Extracts various metadata for the specified file.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        A dictionary containing the extracted metadata.
+
+    Raises:
+        Exception: If there is an error extracting the metadata.
+    """
     try:
         with ExifToolHelper() as et:
             for d in et.get_metadata(file_path):

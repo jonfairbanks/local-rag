@@ -25,11 +25,21 @@ def create_client(host: str):
         - host (str): The hostname or IP address of the Ollama server.
 
     Returns:
-        - ollama.Client: An instance of the Ollama client.
+        - An instance of the Ollama client.
+
+    Raises:
+        - Exception: If there is an error creating the client.
+
+    Notes:
+        This function creates a client for interacting with the Ollama API using the `ollama` library. It takes a single parameter, `host`, which should be the hostname or IP address of the Ollama server. The function returns an instance of the Ollama client, or raises an exception if there is an error creating the client.
     """
-    client = ollama.Client(host=host)
-    logs.log.info("Ollama chat client created successfully")
-    return client
+    try:
+        client = ollama.Client(host=host)
+        logs.log.info("Ollama chat client created successfully")
+        return client
+    except Exception as err:
+        logs.log.error(f"Failed to create Ollama client: {err}")
+        return False
 
 
 ###################################
@@ -44,16 +54,37 @@ def get_models():
     Retrieves a list of available language models from the Ollama server.
 
     Returns:
-        - models: A list of available language model names.
+        - models (list[str]): A list of available language model names.
+
+    Raises:
+        - Exception: If there is an error retrieving the list of models.
+
+    Notes:
+        This function retrieves a list of available language models from the Ollama server using the `ollama` library. It takes no parameters and returns a list of available language model names. 
+        
+        The function raises an exception if there is an error retrieving the list of models.
+
+    Side Effects:
+        - st.session_state["ollama_models"] is set to the list of available language models.
     """
-    chat_client = create_client(st.session_state["ollama_endpoint"])
-    data = chat_client.list()
-    models = []
-    for model in data["models"]:
-        models.append(model["name"])
-    logs.log.info("Ollama models loaded successuflly")
-    st.session_state["ollama_models"] = models
-    return models
+    try:
+        chat_client = create_client(st.session_state["ollama_endpoint"])
+        data = chat_client.list()
+        models = []
+        for model in data["models"]:
+            models.append(model["name"])
+
+        st.session_state["ollama_models"] = models
+
+        if len(models) > 0:
+            logs.log.info("Ollama models loaded successfully")
+        else:
+            logs.log.warn("Ollama did not return any models. Make sure to download some!")
+        
+        return models
+    except Exception as err:
+        logs.log.error(f"Failed to retrieve Ollama model list: {err}")
+        return False
 
 
 ###################################
@@ -122,17 +153,30 @@ def chat(prompt: str):
 
 def context_chat(prompt: str, query_engine):
     """
-    Initiates a chat with context using the Ollama language model and index.
+    Initiates a chat with context using the Llama-Index query_engine.
 
     Parameters:
         - prompt (str): The starting prompt for the conversation.
-        - query_engine (str): TODO: Write this section
+        - query_engine (RetrieverQueryEngine): The Llama-Index query engine to use for retrieving answers.
 
     Yields:
-        - str: Successive chunks of conversation from the Ollama model with context.
-    """
+        - str: Successive chunks of conversation from the Llama-Index model with context.
 
-    # print(type(query_engine)) # <class 'llama_index.core.query_engine.retriever_query_engine.RetrieverQueryEngine'>
+    Raises:
+        - Exception: If there is an error retrieving answers from the Llama-Index model.
+
+    Notes:
+        This function initiates a chat with context using the Llama-Index language model and index. 
+        
+        It takes two parameters, `prompt` and `query_engine`, which should be the starting prompt for the conversation and the Llama-Index query engine to use for retrieving answers, respectively. 
+        
+        The function returns an iterable yielding successive chunks of conversation from the Llama-Index index with context. 
+        
+        If there is an error retrieving answers from the Llama-Index instance, the function raises an exception.
+
+    Side Effects:
+        - The chat conversation is generated and returned as successive chunks of text.
+    """
 
     try:
         stream = query_engine.query(prompt)

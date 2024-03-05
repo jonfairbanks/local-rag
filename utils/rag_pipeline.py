@@ -11,6 +11,30 @@ import utils.llama_index as llama_index
 import utils.logs as logs
 
 def rag_pipeline(uploaded_files: list = None):
+    """
+    RAG pipeline for Llama-based chatbots.
+
+    Parameters:
+        - uploaded_files (list, optional): List of files to be processed.
+            If none are provided, the function will load files from the current working directory.
+
+    Yields:
+        - str: Successive chunks of conversation from the Ollama model with context.
+
+    Raises:
+        - Exception: If there is an error retrieving answers from the Ollama model or creating the service context.
+
+    Notes:
+        This function initiates a chat with context using the Llama-Index library and the Ollama language model. It takes one optional parameter, `uploaded_files`, which should be a list of files to be processed. If no files are provided, the function will load files from the current working directory. The function returns an iterable yielding successive chunks of conversation from the Ollama model with context. If there is an error retrieving answers from the Ollama model or creating the service context, the function raises an exception.
+
+    Context:
+        - logs.log: A logger for logging events related to this function.
+
+    Side Effects:
+        - Creates a service context using the provided Ollama model and embedding file.
+        - Loads documents from the current working directory or the provided list of files.
+        - Removes the loaded documents and any temporary files created during processing.
+    """
     error = None
 
     #################################
