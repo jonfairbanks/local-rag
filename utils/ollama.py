@@ -9,6 +9,7 @@ import utils.logs as logs
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
 from llama_index.llms.ollama import Ollama
+from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 
 ###################################
 #
@@ -151,7 +152,7 @@ def chat(prompt: str):
 ###################################
 
 
-def context_chat(prompt: str, query_engine):
+def context_chat(prompt: str, query_engine: RetrieverQueryEngine):
     """
     Initiates a chat with context using the Llama-Index query_engine.
 
