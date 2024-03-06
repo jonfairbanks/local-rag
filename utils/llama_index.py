@@ -28,6 +28,21 @@ from llama_index.core import (
 def setup_embedding_model(
     model: str,
 ):
+    """
+    Sets up an embedding model using the Hugging Face library.
+
+    Args:
+        model (str): The name of the embedding model to use.
+
+    Returns:
+        An instance of the HuggingFaceEmbedding class, configured with the specified model and device.
+
+    Raises:
+        ValueError: If the specified model is not a valid embedding model.
+
+    Notes:
+        The `device` parameter can be set to 'cpu' or 'cuda' to specify the device to use for the embedding computations. If 'cuda' is used and CUDA is available, the embedding model will be run on the GPU. Otherwise, it will be run on the CPU.
+    """
     device = 'cpu' if not cuda.is_available() else 'cuda'
     embed_model = HuggingFaceEmbedding(
         model_name=model,
@@ -48,11 +63,32 @@ def setup_embedding_model(
 
 def create_service_context(
     llm,  # TODO: Determine type
-    system_prompt: str = None,  # TODO: What are the implications of no system prompt being passed?
+    system_prompt: str = None,
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
     chunk_overlap: int = 200,  # Llama-Index default is 200
 ):
+    """
+    Creates a service context for the Llama language model.
+
+    Args:
+        llm (tbd): The Ollama language model to use.
+        system_prompt (str): An optional string that can be used as the system prompt when generating text. If no system prompt is passed, the default value will be used.
+        embed_model (str): The name of the embedding model to use. Can also be a path to a saved embedding model.
+        chunk_size (int): The size of each chunk of text to generate. Defaults to 1024.
+        chunk_overlap (int): The amount of overlap between adjacent chunks of text. Defaults to 200.
+
+    Returns:
+        A ServiceContext instance, configured with the specified Llama model, system prompt, and embedding model.
+
+    Raises:
+        ValueError: If the specified Llama model is not a valid Llama model.
+        ValueError: If the specified embed_model is not a valid embedding model.
+
+    Notes:
+        The `embed_model` parameter can be set to a path to a saved embedding model, or to a string representing the name of the embedding model to use. If the `embed_model` parameter is set to a path, it will be loaded and used to create the service context. Otherwise, it will be created using the specified name.
+        The `chunk_size` and `chunk_overlap` parameters can be adjusted to control how much text is generated in each chunk and how much overlap there is between chunks.
+    """
     formatted_embed_model = f"local:{embed_model}"
     try:
         embedding_model = setup_embedding_model(embed_model)
@@ -83,6 +119,21 @@ def create_service_context(
 
 
 def load_documents(data_dir: str):
+    """
+    Loads documents from a directory of files.
+
+    Args:
+        data_dir (str): The path to the directory containing the documents to be loaded.
+
+    Returns:
+        A list of documents, where each document is a string representing the content of the corresponding file.
+
+    Raises:
+        Exception: If there is an error creating the data index.
+
+    Notes:
+        The `data_dir` parameter should be a path to a directory containing files that represent the documents to be loaded. The function will iterate over all files in the directory, and load their contents into a list of strings.
+    """
     try:
         files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
         documents = files.load_data(files)
@@ -105,13 +156,34 @@ def load_documents(data_dir: str):
 
 @st.cache_data(show_spinner=False)
 def create_index(_documents, _service_context):
-    index = VectorStoreIndex.from_documents(
-        documents=_documents, service_context=_service_context, show_progress=True
-    )
+    """
+    Creates an index from the provided documents and service context.
 
-    logs.log.info("Index created from loaded documents successfully")
+    Args:
+        documents (list[str]): A list of strings representing the content of the documents to be indexed.
+        service_context (ServiceContext): The service context to use when creating the index.
 
-    return index
+    Returns:
+        An instance of `VectorStoreIndex`, containing the indexed data.
+
+    Raises:
+        Exception: If there is an error creating the index.
+
+    Notes:
+        The `documents` parameter should be a list of strings representing the content of the documents to be indexed. The `service_context` parameter should be an instance of `ServiceContext`, providing information about the Llama model and other configuration settings for the index.
+    """
+    
+    try:
+        index = VectorStoreIndex.from_documents(
+            documents=_documents, service_context=_service_context, show_progress=True
+        )
+
+        logs.log.info("Index created from loaded documents successfully")
+
+        return index
+    except Exception as err:
+        logs.log.error(f"Index creation failed: {err}")
+        return False
 
 
 ###################################
@@ -123,6 +195,24 @@ def create_index(_documents, _service_context):
 
 @st.cache_data(show_spinner=False)
 def create_query_engine(_documents, _service_context):
+    """
+    Creates a query engine from the provided documents and service context.
+
+    Args:
+        documents (list[str]): A list of strings representing the content of the documents to be indexed.
+        service_context (ServiceContext): The service context to use when creating the index.
+
+    Returns:
+        An instance of `QueryEngine`, containing the indexed data and allowing for querying of the data using a variety of parameters.
+
+    Raises:
+        Exception: If there is an error creating the query engine.
+
+    Notes:
+        The `documents` parameter should be a list of strings representing the content of the documents to be indexed. The `service_context` parameter should be an instance of `ServiceContext`, providing information about the Llama model and other configuration settings for the index.
+
+        This function uses the `create_index` function to create an index from the provided documents and service context, and then creates a query engine from the resulting index. The `query_engine` parameter is used to specify the parameters of the query engine, including the number of top-ranked items to return (`similarity_top_k`), the response mode (`response_mode`), and the service context (`service_context`).
+    """
     try:
         index = create_index(_documents, _service_context)
 
