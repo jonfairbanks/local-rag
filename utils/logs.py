@@ -10,7 +10,7 @@ def setup_logger(log_file: str = "local-rag.log", level: Union[int, str] = loggi
 
     Args:
         log_file (str, optional): The file to which the logs should be written. Defaults to "local-rag.log".
-        level (logging.Level, optional): The logging level at which to log messages. Defaults to logging.INFO.
+        level (str, optional): The logging level at which to log messages. Defaults to logging.INFO.
 
     Returns:
         logging.Logger: The set up logger.
