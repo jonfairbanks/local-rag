@@ -5,7 +5,7 @@ import streamlit as st
 import utils.logs as logs
 
 from numba import cuda
-from llama_index.embeddings.huggingface import ( HuggingFaceEmbedding )
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
@@ -23,6 +23,7 @@ from llama_index.core import (
 # Setup Embedding Model
 #
 ###################################
+
 
 @st.cache_resource(show_spinner=False)
 def setup_embedding_model(
@@ -43,11 +44,11 @@ def setup_embedding_model(
     Notes:
         The `device` parameter can be set to 'cpu' or 'cuda' to specify the device to use for the embedding computations. If 'cuda' is used and CUDA is available, the embedding model will be run on the GPU. Otherwise, it will be run on the CPU.
     """
-    device = 'cpu' if not cuda.is_available() else 'cuda'
+    device = "cpu" if not cuda.is_available() else "cuda"
     embed_model = HuggingFaceEmbedding(
         model_name=model,
         # embed_batch_size=25, // TODO: Turning this on creates chaos, but has the potential to improve performance
-        device=device
+        device=device,
     )
     logs.log.info(f"Embedding model created successfully")
     return embed_model
@@ -60,6 +61,7 @@ def setup_embedding_model(
 ###################################
 
 # TODO: Migrate to LlamaIndex.Settings: https://docs.llamaindex.ai/en/stable/module_guides/supporting_modules/service_context_migration.html
+
 
 def create_service_context(
     llm,  # TODO: Determine type
@@ -101,7 +103,7 @@ def create_service_context(
         )
         logs.log.info(f"Service Context created successfully")
         st.session_state["service_context"] = service_context
-        
+
         # Note: this may be redundant since service_context is returned
         set_global_service_context(service_context)
 
@@ -143,7 +145,9 @@ def load_documents(data_dir: str):
         logs.log.error(f"Error creating data index: {err}")
     finally:
         for file in os.scandir(data_dir):
-            if file.is_file() and not file.name.startswith(".gitkeep"): # TODO: Confirm syntax here
+            if file.is_file() and not file.name.startswith(
+                ".gitkeep"
+            ):  # TODO: Confirm syntax here
                 os.remove(file.path)
         logs.log.info(f"Document loading complete; removing local file(s)")
 
@@ -153,6 +157,7 @@ def load_documents(data_dir: str):
 # Create Document Index
 #
 ###################################
+
 
 @st.cache_data(show_spinner=False)
 def create_index(_documents, _service_context):
@@ -172,7 +177,7 @@ def create_index(_documents, _service_context):
     Notes:
         The `documents` parameter should be a list of strings representing the content of the documents to be indexed. The `service_context` parameter should be an instance of `ServiceContext`, providing information about the Llama model and other configuration settings for the index.
     """
-    
+
     try:
         index = VectorStoreIndex.from_documents(
             documents=_documents, service_context=_service_context, show_progress=True
@@ -193,7 +198,7 @@ def create_index(_documents, _service_context):
 ###################################
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def create_query_engine(_documents, _service_context):
     """
     Creates a query engine from the provided documents and service context.

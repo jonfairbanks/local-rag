@@ -15,6 +15,7 @@ def generate_welcome_message(msg):
         time.sleep(0.025)  # This is blocking :(
         yield char
 
+
 ### Setup Initial State
 set_initial_state()
 

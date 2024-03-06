@@ -111,7 +111,7 @@ def clone_github_repo(repo: str):
 # Extract File Metadata
 #
 ###################################
-    
+
 
 def get_file_metadata(file_path):
     """

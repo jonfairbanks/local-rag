@@ -11,8 +11,8 @@ def set_initial_state():
     # General #
     ###########
 
-    if 'sidebar_state' not in st.session_state:
-        st.session_state['sidebar_state'] = 'expanded'
+    if "sidebar_state" not in st.session_state:
+        st.session_state["sidebar_state"] = "expanded"
 
     if "ollama_endpoint" not in st.session_state:
         st.session_state["ollama_endpoint"] = "http://localhost:11434"
@@ -30,10 +30,14 @@ def set_initial_state():
 
     if "selected_model" not in st.session_state:
         try:
-            if("llama2:7b" in st.session_state["ollama_models"]):
-                st.session_state["selected_model"] = "llama2:7b" # Default to llama2:7b on initial load
+            if "llama2:7b" in st.session_state["ollama_models"]:
+                st.session_state["selected_model"] = (
+                    "llama2:7b"  # Default to llama2:7b on initial load
+                )
             else:
-                st.session_state["selected_model"] = st.session_state["ollama_models"][0] # If llama2:7b is not present, select the first model available
+                st.session_state["selected_model"] = st.session_state["ollama_models"][
+                    0
+                ]  # If llama2:7b is not present, select the first model available
         except Exception:
             st.session_state["selected_model"] = None
             pass

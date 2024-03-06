@@ -22,6 +22,7 @@ supported_files = (
     "txt",
 )
 
+
 def local_files():
     # Force users to confirm Settings before uploading files
     if st.session_state["selected_model"] is not None:
