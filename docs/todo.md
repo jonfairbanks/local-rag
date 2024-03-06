@@ -1,6 +1,6 @@
 # To Do
 
-Below is a rough outline of proposesd features and outstanding issues that are being tracked.
+Below is a rough outline of proposed features and outstanding issues that are being tracked.
 
 Although not final, items are generally sorted from highest to lowest priority.
 
@@ -35,7 +35,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] Enable Caching
 - [ ] Swap Repo & Website input to [Streamlit-Tags](https://gagan3012-streamlit-tags-examplesapp-7aiy65.streamlit.app)
 - [ ] Allow Users to Set LLM Settings
-    - [x] System Prompt
+    - [ ] System Prompt (needs more work)
     - [x] Chat Mode
     - [ ] Temperature
     - [x] top_k
