@@ -19,7 +19,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] Docker Support
     - [x] Windows Support
 - [ ] Extract Metadata and Load into Index
-- [ ] Parallelize Document Embeddings
+- [x] Faster Document Embeddings (Cuda, Batch Size, ...)
 - [ ] Swap to OpenAI compatible endpoints
 - [ ] Allow Usage of Ollama hosted embeddings
 - [ ] Enable support for additional LLM backends
@@ -33,7 +33,6 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] View and Manage Imported Files
 - [x] About Tab in Sidebar w/ Resources
 - [x] Enable Caching
-- [ ] Swap Repo & Website input to [Streamlit-Tags](https://gagan3012-streamlit-tags-examplesapp-7aiy65.streamlit.app)
 - [ ] Allow Users to Set LLM Settings
     - [ ] System Prompt (needs more work)
     - [x] Chat Mode
@@ -55,7 +54,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] Refactor README
 - [x] Implement Log Library
 - [x] Improve Logging
-- [ ] Re-write Docstrings
+- [x] Re-write Docstrings
 - [ ] Tests
 
 ### Known Issues & Bugs

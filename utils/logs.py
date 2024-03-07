@@ -4,7 +4,9 @@ import sys
 from typing import Union
 
 
-def setup_logger(log_file: str = "local-rag.log", level: Union[int, str] = logging.INFO):
+def setup_logger(
+    log_file: str = "local-rag.log", level: Union[int, str] = logging.INFO
+):
     """
     Sets up a logger for this module.
 

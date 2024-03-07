@@ -10,6 +10,7 @@ import utils.ollama as ollama
 import utils.llama_index as llama_index
 import utils.logs as logs
 
+
 def rag_pipeline(uploaded_files: list = None):
     """
     RAG pipeline for Llama-based chatbots.
@@ -48,7 +49,6 @@ def rag_pipeline(uploaded_files: list = None):
                 func.save_uploaded_file(uploaded_file, save_dir)
 
         st.caption("✔️ Files Uploaded")
-
 
     ######################################
     # Create Llama-Index service-context #
@@ -110,7 +110,10 @@ def rag_pipeline(uploaded_files: list = None):
     #######################################
 
     # if documents already exists in state
-    if st.session_state["documents"] is not None and len(st.session_state["documents"]) > 0:
+    if (
+        st.session_state["documents"] is not None
+        and len(st.session_state["documents"]) > 0
+    ):
         logs.log.info("Documents are already available; skipping document loading")
         st.caption("✔️ Processed File Data")
     else:
@@ -145,13 +148,15 @@ def rag_pipeline(uploaded_files: list = None):
     # Remove data files #
     #####################
 
-    if len(st.session_state['file_list']) > 0:
+    if len(st.session_state["file_list"]) > 0:
         try:
             save_dir = os.getcwd() + "/data"
             shutil.rmtree(save_dir)
             st.caption("✔️ Removed Temp Files")
         except Exception as err:
-            logs.log.warning(f"Unable to delete data files, you may want to clean-up manually: {str(err)}")
+            logs.log.warning(
+                f"Unable to delete data files, you may want to clean-up manually: {str(err)}"
+            )
             pass
-    
-    return error # If no errors occurred, None is returned
+
+    return error  # If no errors occurred, None is returned

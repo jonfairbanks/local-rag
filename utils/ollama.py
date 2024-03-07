@@ -61,8 +61,8 @@ def get_models():
         - Exception: If there is an error retrieving the list of models.
 
     Notes:
-        This function retrieves a list of available language models from the Ollama server using the `ollama` library. It takes no parameters and returns a list of available language model names. 
-        
+        This function retrieves a list of available language models from the Ollama server using the `ollama` library. It takes no parameters and returns a list of available language model names.
+
         The function raises an exception if there is an error retrieving the list of models.
 
     Side Effects:
@@ -80,8 +80,10 @@ def get_models():
         if len(models) > 0:
             logs.log.info("Ollama models loaded successfully")
         else:
-            logs.log.warn("Ollama did not return any models. Make sure to download some!")
-        
+            logs.log.warn(
+                "Ollama did not return any models. Make sure to download some!"
+            )
+
         return models
     except Exception as err:
         logs.log.error(f"Failed to retrieve Ollama model list: {err}")
@@ -167,12 +169,12 @@ def context_chat(prompt: str, query_engine: RetrieverQueryEngine):
         - Exception: If there is an error retrieving answers from the Llama-Index model.
 
     Notes:
-        This function initiates a chat with context using the Llama-Index language model and index. 
-        
-        It takes two parameters, `prompt` and `query_engine`, which should be the starting prompt for the conversation and the Llama-Index query engine to use for retrieving answers, respectively. 
-        
-        The function returns an iterable yielding successive chunks of conversation from the Llama-Index index with context. 
-        
+        This function initiates a chat with context using the Llama-Index language model and index.
+
+        It takes two parameters, `prompt` and `query_engine`, which should be the starting prompt for the conversation and the Llama-Index query engine to use for retrieving answers, respectively.
+
+        The function returns an iterable yielding successive chunks of conversation from the Llama-Index index with context.
+
         If there is an error retrieving answers from the Llama-Index instance, the function raises an exception.
 
     Side Effects:

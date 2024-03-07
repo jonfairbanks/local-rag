@@ -2,6 +2,7 @@
 
 ![local-rag-demo](demo.gif)
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8588/badge)](https://www.bestpractices.dev/projects/8588)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/jonfairbanks/local-rag)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
 ![GitHub License](https://img.shields.io/github/license/jonfairbanks/local-rag)
@@ -13,8 +14,12 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 Features:
 
 - Offline Embeddings & LLMs Support (No OpenAI!)
+- Support for Multiple Sources
+    - Local Files
+    - GitHub Repos
+    - Websites
 - Streaming Responses
-- Conversation Memory
+- Conversational Memory
 - Chat Export
 
 Learn More:

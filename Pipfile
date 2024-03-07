@@ -12,11 +12,12 @@ llama-index-embeddings-huggingface = "*"
 pycryptodome = "*"
 nbconvert = "*"
 pyexiftool = "*"
-numba = "*"
 llama-index-readers-web = "*"
 html2text = "*"
 streamlit-tags = "*"
 streamlit-extras = "*"
+black = "*"
+torch = "*"
 
 [dev-packages]
 
