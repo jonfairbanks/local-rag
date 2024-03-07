@@ -14,8 +14,12 @@ Ingest files for retrieval augmented generation (RAG) with open-source Large Lan
 Features:
 
 - Offline Embeddings & LLMs Support (No OpenAI!)
+- Support for Multiple Sources
+    - Local Files
+    - GitHub Repos
+    - Websites
 - Streaming Responses
-- Conversation Memory
+- Conversational Memory
 - Chat Export
 
 Learn More:
