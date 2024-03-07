@@ -4,10 +4,10 @@ import streamlit as st
 
 import utils.logs as logs
 
-from numba import cuda
+from torch import cuda
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-# This is not used but required by llama-index and must be imported FIRST
+# This is not used but required by llama-index and must be set FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
 from llama_index.core import (
@@ -45,6 +45,7 @@ def setup_embedding_model(
         The `device` parameter can be set to 'cpu' or 'cuda' to specify the device to use for the embedding computations. If 'cuda' is used and CUDA is available, the embedding model will be run on the GPU. Otherwise, it will be run on the CPU.
     """
     device = "cpu" if not cuda.is_available() else "cuda"
+    logs.log.info(f"Using {device} to generate embeddings")
     embed_model = HuggingFaceEmbedding(
         model_name=model,
         # embed_batch_size=25, // TODO: Turning this on creates chaos, but has the potential to improve performance
@@ -97,7 +98,7 @@ def create_service_context(
         service_context = ServiceContext.from_defaults(
             llm=llm,
             system_prompt=system_prompt,
-            embed_model=formatted_embed_model,
+            embed_model=embedding_model,
             chunk_size=int(chunk_size),
             # chunk_overlap=int(chunk_overlap),
         )
