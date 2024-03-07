@@ -13,3 +13,11 @@ Before you get started with Local RAG, ensure you have:
 
 ### Docker
 - `docker compose up -d`
+
+#### Note:
+
+If you are running Ollama as a service, you may need to add an additional configuration to your docker-compose.yml file:
+```
+extra_hosts:
+- 'host.docker.internal:host-gateway'
+```
