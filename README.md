@@ -30,3 +30,4 @@ Learn More:
 - [Planned Features](docs/todo.md)
 - [Known Bugs & Issues](docs/todo.md#known-issues--bugs)
 - [Resources](docs/resources.md)
+- [Contributing](docs/contributing.md)
