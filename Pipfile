@@ -18,6 +18,7 @@ streamlit-tags = "*"
 streamlit-extras = "*"
 black = "*"
 torch = "*"
+colorama = {version="*",sys_platform ="== 'win32'"}
 
 [dev-packages]
 
