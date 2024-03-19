@@ -44,7 +44,10 @@ def setup_embedding_model(
     Notes:
         The `device` parameter can be set to 'cpu' or 'cuda' to specify the device to use for the embedding computations. If 'cuda' is used and CUDA is available, the embedding model will be run on the GPU. Otherwise, it will be run on the CPU.
     """
-    device = "cpu" if not cuda.is_available() else "cuda"
+    try:
+        device = "cpu" if not cuda.is_available() else "cuda"
+    except:
+        device = "cpu"
     logs.log.info(f"Using {device} to generate embeddings")
     embed_model = HuggingFaceEmbedding(
         model_name=model,
