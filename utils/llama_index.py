@@ -109,7 +109,7 @@ def create_service_context(
         return service_context
     except Exception as e:
         logs.log.error(f"Failed to create service_context: {e}")
-        Exception(f"Failed to create service_context: {e}")  # TODO: Redundant?
+        raise Exception(f"Failed to create service_context: {e}")  # TODO: Redundant?
 
 
 ###################################
@@ -142,6 +142,7 @@ def load_documents(data_dir: str):
         return documents
     except Exception as err:
         logs.log.error(f"Error creating data index: {err}")
+        raise Exception(f"Error creating data index: {err}")
     finally:
         for file in os.scandir(data_dir):
             if file.is_file() and not file.name.startswith(
@@ -187,7 +188,7 @@ def create_index(_documents, _service_context):
         return index
     except Exception as err:
         logs.log.error(f"Index creation failed: {err}")
-        return False
+        raise Exception(f"Index creation failed: {err}")
 
 
 ###################################
@@ -225,7 +226,6 @@ def create_query_engine(_documents, _service_context):
             response_mode=st.session_state["chat_mode"],
             service_context=_service_context,
             streaming=True,
-            # verbose=True, # Broken?
         )
 
         st.session_state["query_engine"] = query_engine
@@ -235,3 +235,4 @@ def create_query_engine(_documents, _service_context):
         return query_engine
     except Exception as e:
         logs.log.error(f"Error when creating Query Engine: {e}")
+        raise Exception(f"Error when creating Query Engine: {e}")
