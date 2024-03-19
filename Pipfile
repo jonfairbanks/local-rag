@@ -17,8 +17,9 @@ html2text = "*"
 streamlit-tags = "*"
 streamlit-extras = "*"
 black = "*"
-torch = "*"
-colorama = {version="*",sys_platform ="== 'win32'"}
+torch = { version = "*", sys_platform = "!= 'darwin'" }
+colorama = { version = "*", sys_platform = "== 'win32'" }
+ebooklib = "*"
 
 [dev-packages]
 
