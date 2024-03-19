@@ -48,7 +48,6 @@ def setup_embedding_model(
     logs.log.info(f"Using {device} to generate embeddings")
     embed_model = HuggingFaceEmbedding(
         model_name=model,
-        # embed_batch_size=25, // TODO: Turning this on creates chaos, but has the potential to improve performance
         device=device,
     )
     logs.log.info(f"Embedding model created successfully")
@@ -69,7 +68,7 @@ def create_service_context(
     system_prompt: str = None,
     embed_model: str = "BAAI/bge-large-en-v1.5",
     chunk_size: int = 1024,  # Llama-Index default is 1024
-    chunk_overlap: int = 200,  # Llama-Index default is 200
+    chunk_overlap: int = 200,  # Llama-Index default is 20
 ):
     """
     Creates a service context for the Llama language model.
@@ -92,7 +91,6 @@ def create_service_context(
         The `embed_model` parameter can be set to a path to a saved embedding model, or to a string representing the name of the embedding model to use. If the `embed_model` parameter is set to a path, it will be loaded and used to create the service context. Otherwise, it will be created using the specified name.
         The `chunk_size` and `chunk_overlap` parameters can be adjusted to control how much text is generated in each chunk and how much overlap there is between chunks.
     """
-    formatted_embed_model = f"local:{embed_model}"
     try:
         embedding_model = setup_embedding_model(embed_model)
         service_context = ServiceContext.from_defaults(
