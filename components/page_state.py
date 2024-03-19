@@ -107,4 +107,4 @@ def set_initial_state():
         st.session_state["chunk_size"] = 1024
 
     if "chunk_overlap" not in st.session_state:
-        st.session_state["chunk_overlap"] = 20
+        st.session_state["chunk_overlap"] = 200
