@@ -12,7 +12,7 @@ from components.page_state import set_initial_state
 
 def generate_welcome_message(msg):
     for char in msg:
-        time.sleep(0.025)  # This is blocking :(
+        time.sleep(0.025)  # TODO: Find a better way -- This is blocking :(
         yield char
 
 

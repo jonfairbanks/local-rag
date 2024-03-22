@@ -18,14 +18,14 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] Export Data (Chat History, ...)
 - [x] Docker Support
     - [x] Windows Support
-- [ ] Extract Metadata and Load into Index
+- [x] Extract Metadata and Load into Index
 - [x] Faster Document Embeddings (Cuda, Batch Size, ...)
 - [ ] Swap to OpenAI compatible endpoints
 - [ ] Allow Usage of Ollama hosted embeddings
 - [ ] Enable support for additional LLM backends
     - [ ] Local AI
     - [ ] TabbyAPI
-- [ ] Remove File Type Limitations for Uploads
+- [ ] Remove File Type Limitations for Uploads?
 
 ### User Experience
 
@@ -34,7 +34,7 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] About Tab in Sidebar w/ Resources
 - [x] Enable Caching
 - [ ] Allow Users to Set LLM Settings
-    - [ ] System Prompt (needs more work)
+    - [x] System Prompt
     - [x] Chat Mode
     - [ ] Temperature
     - [x] top_k
@@ -68,3 +68,4 @@ Although not final, items are generally sorted from highest to lowest priority.
 
 - [ ] Investigate [R2R](https://github.com/SciPhi-AI/R2R) backend support/migration
 - [ ] ROCm Support -- Wanted: AMD Testers! 🔍🔴
+- [ ] Improved Windows / Windows + Docker Support

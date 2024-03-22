@@ -76,9 +76,6 @@ def set_initial_state():
     if "query_engine" not in st.session_state:
         st.session_state["query_engine"] = None
 
-    if "service_context" not in st.session_state:
-        st.session_state["service_context"] = None
-
     if "chat_mode" not in st.session_state:
         st.session_state["chat_mode"] = "compact"
 
@@ -107,4 +104,4 @@ def set_initial_state():
         st.session_state["chunk_size"] = 1024
 
     if "chunk_overlap" not in st.session_state:
-        st.session_state["chunk_overlap"] = 20
+        st.session_state["chunk_overlap"] = 200

@@ -53,4 +53,4 @@ def local_files():
             if error is not None:
                 st.exception(error)
             else:
-                st.write("Your files are ready. Let's chat! 😎")
+                st.write("Your files are ready. Let's chat! 😎") # TODO: This should be a button.
