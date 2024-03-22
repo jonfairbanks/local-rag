@@ -59,6 +59,7 @@ def rag_pipeline(uploaded_files: list = None):
         llm = ollama.create_ollama_llm(
             st.session_state["selected_model"],
             st.session_state["ollama_endpoint"],
+            st.session_state["system_prompt"],
         )
         st.session_state["llm"] = llm
         st.caption("✔️ LLM Initialized")
