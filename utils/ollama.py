@@ -9,6 +9,7 @@ import utils.logs as logs
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
 from llama_index.llms.ollama import Ollama
+from llama_index.core import Settings
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 
 ###################################
@@ -98,7 +99,7 @@ def get_models():
 
 
 @st.cache_data(show_spinner=False)
-def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> Ollama:
+def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, request_timeout: int = 60) -> Ollama:
     """
     Create an instance of the Ollama language model.
 
@@ -111,9 +112,9 @@ def create_ollama_llm(model: str, base_url: str, request_timeout: int = 60) -> O
         - llm: An instance of the Ollama language model with the specified configuration.
     """
     try:
-        llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
+        Settings.llm = Ollama(model=model, base_url=base_url, system_prompt=system_prompt, request_timeout=request_timeout)
         logs.log.info("Ollama LLM instance created successfully")
-        return llm
+        return Settings.llm
     except Exception as e:
         logs.log.error(f"Error creating Ollama language model: {e}")
         return None
@@ -138,7 +139,10 @@ def chat(prompt: str):
     """
 
     try:
-        llm = create_ollama_llm()
+        llm = create_ollama_llm(
+            st.session_state["selected_model"],
+            st.session_state["ollama_endpoint"],
+        )
         stream = llm.stream_complete(prompt)
         for chunk in stream:
             yield chunk.delta
@@ -184,7 +188,8 @@ def context_chat(prompt: str, query_engine: RetrieverQueryEngine):
     try:
         stream = query_engine.query(prompt)
         for text in stream.response_gen:
-            yield text
+            # print(str(text), end="", flush=True)
+            yield str(text)
     except Exception as err:
         logs.log.error(f"Ollama chat stream error: {err}")
         return

@@ -91,16 +91,12 @@ def rag_pipeline(uploaded_files: list = None):
         hf_embedding_model = st.session_state["other_embedding_model"]
 
     try:
-        llama_index.create_service_context(
-            st.session_state["llm"],
-            st.session_state["system_prompt"],
+        llama_index.setup_embedding_model(
             hf_embedding_model,
-            st.session_state["chunk_size"],
-            # st.session_state["chunk_overlap"],
         )
-        st.caption("✔️ Context Created")
+        st.caption("✔️ Embedding Model Created")
     except Exception as err:
-        logs.log.error(f"Setting up Service Context failed: {str(err)}")
+        logs.log.error(f"Setting up Embedding Model failed: {str(err)}")
         error = err
         st.exception(error)
         st.stop()
@@ -135,7 +131,6 @@ def rag_pipeline(uploaded_files: list = None):
     try:
         llama_index.create_query_engine(
             st.session_state["documents"],
-            st.session_state["service_context"],
         )
         st.caption("✔️ Created File Index")
     except Exception as err:
