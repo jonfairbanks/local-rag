@@ -3,8 +3,8 @@
 ![local-rag-demo](demo.gif)
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8588/badge)](https://www.bestpractices.dev/projects/8588)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/t/jonfairbanks/local-rag)
-![GitHub last commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
+![GitHub Commit Activity](https://img.shields.io/github/commit-activity/t/jonfairbanks/local-rag)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
 ![GitHub License](https://img.shields.io/github/license/jonfairbanks/local-rag)
 
 Offline, Open-Source RAG
@@ -28,6 +28,7 @@ Learn More:
 - [Using Local RAG](docs/usage.md)
 - [RAG Pipeline](docs/pipeline.md)
 - [Planned Features](docs/todo.md)
+- [Troubleshooting](docs/troubleshooting.md)
 - [Known Bugs & Issues](docs/todo.md#known-issues--bugs)
 - [Resources](docs/resources.md)
 - [Contributing](docs/contributing.md)
