@@ -7,17 +7,22 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+**Describe the Bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**Troubleshooting**
+I have read the Local RAG [troubleshooting guide](../../docs/troubleshooting.md), reviewed my application state and log file:
+- [ ] Yes
+- [ ] No
+
+**How To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+**Expected Behavior**
 A clear and concise description of what you expected to happen.
 
 **Screenshots**
@@ -28,14 +33,14 @@ If applicable, attach log files to help explain your problem. **Reproducing your
 
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
+ - Browser [e.g. Chrome, Safari]
  - Version [e.g. 22]
 
 **Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
+ - Device: [e.g. iPhone 15]
+ - OS: [e.g. iOS 17.x]
+ - Browser [e.g. Stock Browser, Safari]
  - Version [e.g. 22]
 
-**Additional context**
+**Additional Context**
 Add any other context about the problem here.
