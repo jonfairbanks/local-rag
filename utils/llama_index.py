@@ -111,7 +111,7 @@ def load_documents(data_dir: str):
 ###################################
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def create_index(_documents):
     """
     Creates an index from the provided documents and service context.
