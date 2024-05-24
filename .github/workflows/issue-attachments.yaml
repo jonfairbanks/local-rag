@@ -1,0 +1,29 @@
+name: Attachment Reminder
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check issue for attachments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const github = require('@actions/github');
+            const octokit = github.getOctokit();
+            const issue = await octokit.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            if (!issue.data.attachments.length) {
+              await octokit.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Please provide a screenshot of the in-app state and/or a copy of your local-rag.log file to help debug this issue. For more information, please checkout the [Troubleshooting Guide](docs/troubleshooting.md).'
+              });
+            }
