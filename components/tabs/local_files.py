@@ -1,12 +1,4 @@
-import os
-import shutil
-
 import streamlit as st
-
-import utils.helpers as func
-import utils.ollama as ollama
-import utils.llama_index as llama_index
-import utils.logs as logs
 import utils.rag_pipeline as rag
 
 supported_files = (
@@ -42,8 +34,21 @@ def local_files():
                 disabled=True,
             )
 
-    if len(uploaded_files) > 0:
+    st.text_input(
+        "Index ID",
+        key="persisted_index_id",
+        placeholder="local-rag-index",
+        help="The unique identifier for the persisted index.",
+    )
+    st.caption(
+        "Persisted indices are stored on disk and can be reloaded for future use. This is useful for retaining the index state across sessions."
+    )
+
+    if len(uploaded_files) > 0 or st.session_state["persisted_index_id"]:
         st.session_state["file_list"] = uploaded_files
+
+        if len(uploaded_files) == 0:
+            uploaded_files = None
 
         with st.spinner("Processing..."):
             # Initiate the RAG pipeline, providing documents to be saved on disk if necessary

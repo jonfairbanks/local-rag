@@ -5,6 +5,10 @@ import streamlit as st
 import utils.logs as logs
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core import StorageContext, load_index_from_storage
+
+from typing import Sequence
+from llama_index.core.schema import Document
 
 # This is not used but required by llama-index and must be set FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
@@ -142,6 +146,45 @@ def create_index(_documents):
         raise Exception(f"Index creation failed: {err}")
 
 
+def get_persisted_index(
+    index_id: str, persist_dir: str, _documents: Sequence[Document]
+):
+    try:
+        # Rebuild storage context
+        storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
+        # Load index
+        index = load_index_from_storage(storage_context, index_id=index_id)
+        logs.log.info("Index loaded from persisted storage successfully")
+
+        st.caption("✔️ Loaded Persisted Index")
+
+        # Check if all upload documents are present in the index
+        if _documents is not None:
+            document_hashes = index.docstore.get_all_document_hashes()
+
+            for doc in _documents:
+                if doc.hash not in document_hashes:
+                    logs.log.info(
+                        "Document {} not found in index. Adding it...".format(
+                            doc.get_doc_id()
+                        )
+                    )
+                    index.insert(doc)
+
+    except Exception as e:
+        logs.log.error(f"Error loading persisted index: {e}")
+
+        if _documents is not None:
+            index = create_index(_documents)
+            index.set_index_id(index_id)
+            index.storage_context.persist(persist_dir=persist_dir)
+            st.caption("✔️ Created Persisted Index")
+        else:
+            raise Exception(f"Cannot create persisted index without documents.")
+
+    return index
+
+
 ###################################
 #
 # Create Query Engine
@@ -169,7 +212,15 @@ def create_query_engine(_documents):
         This function uses the `create_index` function to create an index from the provided documents and service context, and then creates a query engine from the resulting index. The `query_engine` parameter is used to specify the parameters of the query engine, including the number of top-ranked items to return (`similarity_top_k`) and the response mode (`response_mode`).
     """
     try:
-        index = create_index(_documents)
+        if st.session_state["persisted_index_id"]:
+            index = get_persisted_index(
+                index_id=st.session_state["persisted_index_id"],
+                persist_dir=os.getcwd() + "/indices",
+                _documents=_documents,
+            )
+        else:
+            index = create_index(_documents)
+            st.caption("✔️ Created File Index")
 
         query_engine = index.as_query_engine(
             similarity_top_k=st.session_state["top_k"],

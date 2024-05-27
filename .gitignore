@@ -4,3 +4,5 @@ data/*
 .cache/*
 .nv/*
 .DS_Store
+.venv/*
+indices/
