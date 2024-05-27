@@ -35,7 +35,7 @@ def local_files():
             )
 
     st.text_input(
-        "Index ID",
+        "Persisted Index ID",
         key="persisted_index_id",
         placeholder="local-rag-index",
         help="The unique identifier for the persisted index.",
