@@ -149,9 +149,11 @@ def create_index(_documents):
 def get_persisted_index(
     index_id: str, persist_dir: str, _documents: Sequence[Document]
 ):
+
+    storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
     try:
         # Rebuild storage context
-        storage_context = StorageContext.from_defaults(persist_dir=persist_dir)
+        print(storage_context.index_store.index_structs())
         # Load index
         index = load_index_from_storage(storage_context, index_id=index_id)
         logs.log.info("Index loaded from persisted storage successfully")
@@ -175,10 +177,21 @@ def get_persisted_index(
         logs.log.error(f"Error loading persisted index: {e}")
 
         if _documents is not None:
-            index = create_index(_documents)
-            index.set_index_id(index_id)
-            index.storage_context.persist(persist_dir=persist_dir)
-            st.caption("✔️ Created Persisted Index")
+            try:
+                index = VectorStoreIndex.from_documents(
+                    documents=_documents,
+                    show_progress=True,
+                    storage_context=storage_context,
+                )
+
+                logs.log.info("Index created from loaded documents successfully")
+
+                index.set_index_id(index_id)
+                index.storage_context.persist(persist_dir=persist_dir)
+                st.caption("✔️ Created Persisted Index")
+            except Exception as err:
+                logs.log.error(f"Index creation failed: {err}")
+                raise Exception(f"Index creation failed: {err}")
         else:
             raise Exception(f"Cannot create persisted index without documents.")
 
