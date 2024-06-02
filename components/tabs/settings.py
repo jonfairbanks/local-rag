@@ -22,10 +22,10 @@ def settings():
         )
         st.selectbox(
             "Model",
-            st.session_state["ollama_models"] if isinstance(st.session_state["ollama_models"],list) else [],
+            st.session_state["ollama_models"],
             key="selected_model",
-            disabled= not isinstance(st.session_state["ollama_models"],list),
-            placeholder= "Select Model" if isinstance(st.session_state["ollama_models"],list) else "No Models Available",
+            disabled= len(st.session_state["ollama_models"])==0,
+            placeholder= "Select Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
         st.button(
             "Refresh",
