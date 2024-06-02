@@ -24,6 +24,8 @@ def settings():
             "Model",
             st.session_state["ollama_models"],
             key="selected_model",
+            disabled= len(st.session_state["ollama_models"])==0,
+            placeholder= "Select Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
         st.button(
             "Refresh",

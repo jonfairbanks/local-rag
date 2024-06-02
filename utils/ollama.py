@@ -88,8 +88,7 @@ def get_models():
         return models
     except Exception as err:
         logs.log.error(f"Failed to retrieve Ollama model list: {err}")
-        return False
-
+        return []
 
 ###################################
 #
