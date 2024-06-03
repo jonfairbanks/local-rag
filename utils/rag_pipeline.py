@@ -110,9 +110,12 @@ def rag_pipeline(uploaded_files: list = None):
     if (
         st.session_state["documents"] is not None
         and len(st.session_state["documents"]) > 0
+        and not st.session_state["persisted_index_id"]
     ):
         logs.log.info("Documents are already available; skipping document loading")
         st.caption("✔️ Processed File Data")
+    elif st.session_state["persisted_index_id"] and uploaded_files is None:
+        logs.log.info("No new documents to load; using persisted index")
     else:
         try:
             save_dir = os.getcwd() + "/data"
@@ -133,7 +136,6 @@ def rag_pipeline(uploaded_files: list = None):
         llama_index.create_query_engine(
             st.session_state["documents"],
         )
-        st.caption("✔️ Created File Index")
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")
         error = err
