@@ -90,6 +90,7 @@ def get_models():
         logs.log.error(f"Failed to retrieve Ollama model list: {err}")
         return []
 
+
 ###################################
 #
 # Create Ollama LLM instance
@@ -111,7 +112,8 @@ def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, requ
         - llm: An instance of the Ollama language model with the specified configuration.
     """
     try:
-        Settings.llm = Ollama(model=model, base_url=base_url, system_prompt=system_prompt, request_timeout=request_timeout)
+        # Settings.llm = Ollama(model=model, base_url=base_url, system_prompt=system_prompt, request_timeout=request_timeout)
+        Settings.llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
         logs.log.info("Ollama LLM instance created successfully")
         return Settings.llm
     except Exception as e:
