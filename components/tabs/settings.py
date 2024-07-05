@@ -24,6 +24,8 @@ def settings():
             "Model",
             st.session_state["ollama_models"],
             key="selected_model",
+            disabled= len(st.session_state["ollama_models"])==0,
+            placeholder= "Select Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
         st.button(
             "Refresh",
@@ -37,11 +39,11 @@ def settings():
                 value=st.session_state["top_k"],
                 key="top_k",
             )
-            st.text_area(
-                "System Prompt",
-                value=st.session_state["system_prompt"],
-                key="system_prompt",
-            )
+            # st.text_area(
+            #     "System Prompt",
+            #     value=st.session_state["system_prompt"],
+            #     key="system_prompt",
+            # )
             st.selectbox(
                 "Chat Mode",
                 (
