@@ -15,7 +15,7 @@ def set_initial_state():
         st.session_state["sidebar_state"] = "expanded"
 
     if "ollama_endpoint" not in st.session_state:
-        st.session_state["ollama_endpoint"] = "http://localhost:11434"
+        st.session_state["ollama_endpoint"] = "http://host.docker.internal:11434"
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = "Default (bge-large-en-v1.5)"
