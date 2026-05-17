@@ -1,6 +1,10 @@
 import unittest
 
-from components.tabs.local_files import should_process_uploads, uploaded_files_signature
+from components.tabs.local_files import (
+    upload_limit_help_text,
+    should_process_uploads,
+    uploaded_files_signature,
+)
 
 
 class FakeUpload:
@@ -37,6 +41,14 @@ class ShouldProcessUploadsTests(unittest.TestCase):
 
     def test_reprocesses_when_uploads_change(self):
         self.assertTrue(should_process_uploads(("new",), ("old",), object()))
+
+
+class UploadLimitHelpTextTests(unittest.TestCase):
+    def test_describes_application_upload_limits(self):
+        self.assertEqual(
+            upload_limit_help_text(),
+            "Up to 10 files. 25MB per file, 100MB total.",
+        )
 
 
 if __name__ == '__main__':
