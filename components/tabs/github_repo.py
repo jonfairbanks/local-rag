@@ -2,7 +2,6 @@ import streamlit as st
 
 import utils.helpers as func
 import utils.rag_pipeline as rag
-import utils.logs as logs
 
 
 def github_repo():
@@ -15,19 +14,23 @@ def github_repo():
             key="github_repo",
         )
 
-        repo_processed = None
-        repo_processed = st.button(
-            "Process",
-            on_click=func.clone_github_repo,
-            args=(st.session_state["github_repo"],),
-            key="process_github",
-        )
+        repo_processed = st.button("Process", key="process_github")
 
-        with st.spinner("Processing..."):
-            if repo_processed is True:
-                # Initiate the RAG pipeline, providing documents to be saved on disk if necessary
+        if repo_processed:
+            with st.spinner("Processing..."):
+                repo = st.session_state["github_repo"]
+                if not func.validate_github_repo(repo):
+                    st.error(
+                        "That GitHub repository could not be validated. Use the format `owner/repo` and ensure it exists."
+                    )
+                    st.stop()
+
+                clone_ok = func.clone_github_repo(repo)
+                if not clone_ok:
+                    st.error("Failed to clone repository. Check the repo value and logs.")
+                    st.stop()
+
                 error = rag.rag_pipeline()
-                
                 if error is not None:
                     st.exception(error)
                 else:

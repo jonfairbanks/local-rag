@@ -1,13 +1,15 @@
 import os
 import json
+import re
+import shutil
 import requests
 import subprocess
-
-import streamlit as st
 
 from exiftool import ExifToolHelper
 
 import utils.logs as logs
+
+GITHUB_REPO_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
 ###################################
 #
@@ -61,11 +63,15 @@ def validate_github_repo(repo: str):
     Raises:
         Exception: If there is an error validating the repository.
     """
-    repo_endpoint = "https://github.com/" + repo + ".git"
-    resp = requests.head(repo_endpoint)
-    if resp.status_code() == 200:
-        return True
-    else:
+    if repo is None or not GITHUB_REPO_PATTERN.fullmatch(repo):
+        return False
+
+    repo_endpoint = f"https://github.com/{repo}.git"
+    try:
+        resp = requests.head(repo_endpoint, timeout=10, allow_redirects=True)
+        return resp.status_code == 200
+    except Exception as err:
+        logs.log.warning(f"Unable to validate GitHub repository {repo}: {err}")
         return False
 
 
@@ -89,20 +95,38 @@ def clone_github_repo(repo: str):
     Raises:
         Exception: If there is an error cloning the repository.
     """
-    repo_endpoint = "https://github.com/" + repo + ".git"
-    if repo_endpoint is not None:
-        save_dir = os.getcwd() + "/data"
-        clone_command = f"git clone -q {repo_endpoint} {save_dir}/{repo}"
-        try:
-            subprocess.run(clone_command, shell=True)
-            logs.log.info(f"Cloned {repo} repo")
-            return True
-        except Exception as e:
-            Exception(f"Error cloning {repo} GitHub repo: {e}")
+    if repo is None or not GITHUB_REPO_PATTERN.fullmatch(repo):
+        logs.log.error(f"Invalid GitHub repository format: {repo}")
+        return False
+
+    repo_endpoint = f"https://github.com/{repo}.git"
+    save_dir = os.path.join(os.getcwd(), "data")
+    destination = os.path.join(save_dir, repo)
+
+    try:
+        os.makedirs(save_dir, exist_ok=True)
+
+        # Ensure retries of the same repo don't fail because a stale checkout exists.
+        if os.path.isdir(destination):
+            logs.log.info(f"Removing existing repository directory: {destination}")
+            shutil.rmtree(destination)
+
+        result = subprocess.run(
+            ["git", "clone", "-q", repo_endpoint, destination],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            logs.log.error(
+                f"Error cloning {repo} GitHub repo: {result.stderr.strip() or result.stdout.strip()}"
+            )
             return False
 
-    else:
-        Exception(f"Failed to process GitHub repo {st.session_state['github_repo']}")
+        logs.log.info(f"Cloned {repo} repo")
+        return True
+    except Exception as err:
+        logs.log.error(f"Error cloning {repo} GitHub repo: {err}")
         return False
 
 
