@@ -37,16 +37,18 @@ def website():
         process_button = st.button("Process", key="process_website")
 
         if process_button:
-            documents = SimpleWebPageReader(html_to_text=True).load_data(
-                st.session_state["websites"]
-            )
+            try:
+                documents = SimpleWebPageReader(html_to_text=True).load_data(
+                    st.session_state["websites"]
+                )
+            except Exception as err:
+                st.exception(err)
+                st.stop()
 
             if len(documents) > 0:
-                st.session_state["documents"] = documents
-
                 with st.spinner("Processing..."):
                     # Initiate the RAG pipeline, providing documents to be saved on disk if necessary
-                    error = rag.rag_pipeline()
+                    error = rag.rag_pipeline(documents=documents)
 
                     # Display errors (if any) or proceed
                     if error is not None:
