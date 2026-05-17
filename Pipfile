@@ -24,7 +24,6 @@ colorama = { version = "*", sys_platform = "== 'win32'" }
 ebooklib = "*"
 llama-index-core = "*"
 fsspec = "*"
-streamlit-js-eval = "*"
 
 [dev-packages]
 

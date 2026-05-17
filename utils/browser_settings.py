@@ -43,6 +43,8 @@ def apply_persisted_settings(state, raw_settings):
         if key not in raw_settings:
             continue
         raw_value = raw_settings[key]
+        if key == "ollama_endpoint" and raw_value == "":
+            continue
         try:
             if expected_type is bool:
                 value = _coerce_bool(raw_value)
@@ -58,7 +60,9 @@ def serialize_persisted_settings(state):
     return {
         key: state[key]
         for key in PERSISTED_SETTING_TYPES
-        if key in state and state[key] is not None
+        if key in state
+        and state[key] is not None
+        and not (key == "ollama_endpoint" and state[key] == "")
     }
 
 
@@ -80,6 +84,23 @@ def browser_storage_payload(settings):
     return json.dumps(settings)
 
 
+def option_index(options, selected_value):
+    """Return the selectbox index for a restored value, or a stable fallback."""
+    if not options:
+        return None
+    try:
+        return options.index(selected_value)
+    except ValueError:
+        return 0
+
+
+def should_refresh_models_for_endpoint(state, models_key):
+    """Return whether cached Ollama models belong to a different endpoint."""
+    endpoint = state.get("ollama_endpoint")
+    endpoint_key = f"{models_key}_endpoint"
+    return models_key not in state or state.get(endpoint_key) != endpoint
+
+
 def restore_settings_from_browser_storage():
     """Hydrate session state from browser localStorage once per session."""
     if st.session_state.get("browser_settings_restored"):
@@ -91,7 +112,7 @@ def restore_settings_from_browser_storage():
         key="restore_browser_settings",
     )
     if payload is None:
-        return
+        st.stop()
 
     storage_payload = payload
     if isinstance(payload, dict) and "value" in payload:

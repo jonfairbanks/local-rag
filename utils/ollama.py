@@ -108,14 +108,12 @@ def get_embedding_models():
                 st.session_state["ollama_embedding_model"] = embedding_models[0]
             logs.log.info("Ollama embedding models loaded successfully")
         else:
-            st.session_state["ollama_embedding_model"] = None
             logs.log.warning("Ollama did not return any embedding-capable models")
 
         return embedding_models
     except Exception as err:
         logs.log.error(f"Failed to retrieve Ollama embedding model list: {err}")
         st.session_state["ollama_embedding_models"] = []
-        st.session_state["ollama_embedding_model"] = None
         return []
 
 

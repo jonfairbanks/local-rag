@@ -3,6 +3,8 @@ import json
 import streamlit as st
 
 import utils.ollama as ollama
+from components.page_state import default_chat_model
+from utils.browser_settings import option_index
 
 from datetime import datetime
 
@@ -10,10 +12,17 @@ from datetime import datetime
 def _refresh_models():
     ollama.get_models()
     ollama.get_embedding_models()
+    if st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
+        st.session_state["selected_model"] = default_chat_model(
+            st.session_state["ollama_models"]
+        )
+    st.session_state["ollama_models_endpoint"] = st.session_state["ollama_endpoint"]
+    st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
 
 
 def _refresh_embedding_models():
     ollama.get_embedding_models()
+    st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
 
 
 def settings():
@@ -33,13 +42,17 @@ def settings():
             "Chat Model",
             st.session_state["ollama_models"],
             key="selected_model",
+            index=option_index(
+                st.session_state["ollama_models"],
+                st.session_state.get("selected_model"),
+            ),
             disabled= len(st.session_state["ollama_models"])==0,
             placeholder= "Select Chat Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
         st.button(
             "Refresh Models",
             key="refresh_chat_models",
-            on_click=ollama.get_models,
+            on_click=_refresh_models,
         )
         if st.session_state["advanced"] == True:
             st.select_slider(
@@ -86,6 +99,10 @@ def settings():
                 "Embedding Model",
                 st.session_state["ollama_embedding_models"],
                 key="ollama_embedding_model",
+                index=option_index(
+                    st.session_state["ollama_embedding_models"],
+                    st.session_state.get("ollama_embedding_model"),
+                ),
                 disabled=len(st.session_state["ollama_embedding_models"]) == 0,
                 placeholder=(
                     "Select Model"
