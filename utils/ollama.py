@@ -51,43 +51,71 @@ def create_client(host: str):
 ###################################
 
 
+def _get_installed_model_names(chat_client):
+    data = chat_client.list()
+    models = []
+    for model in data["models"]:
+        try:
+            model_name = model.get("model") or model.get("name")
+        except AttributeError:
+            model_name = getattr(model, "model", None) or getattr(model, "name", None)
+
+        if model_name:
+            models.append(model_name)
+    return models
+
+
 def get_models():
-    """
-    Retrieves a list of available language models from the Ollama server.
-
-    Returns:
-        - models (list[str]): A list of available language model names.
-
-    Raises:
-        - Exception: If there is an error retrieving the list of models.
-
-    Notes:
-        This function retrieves a list of available language models from the Ollama server using the `ollama` library. It takes no parameters and returns a list of available language model names.
-
-        The function raises an exception if there is an error retrieving the list of models.
-
-    Side Effects:
-        - st.session_state["ollama_models"] is set to the list of available language models.
-    """
+    """Return installed Ollama models that declare completion capability."""
     try:
         chat_client = create_client(st.session_state["ollama_endpoint"])
-        data = chat_client.list()
         models = []
-        for model in data["models"]:
-            models.append(model["name"])
+        for model_name in _get_installed_model_names(chat_client):
+            details = chat_client.show(model_name)
+            capabilities = getattr(details, "capabilities", None) or details.get("capabilities", [])
+            if "completion" in capabilities:
+                models.append(model_name)
 
         st.session_state["ollama_models"] = models
 
         if len(models) > 0:
-            logs.log.info("Ollama models loaded successfully")
+            logs.log.info("Ollama chat models loaded successfully")
         else:
-            logs.log.warn(
-                "Ollama did not return any models. Make sure to download some!"
-            )
+            logs.log.warning("Ollama did not return any chat-capable models")
 
         return models
     except Exception as err:
         logs.log.error(f"Failed to retrieve Ollama model list: {err}")
+        return []
+
+
+def get_embedding_models():
+    """Return installed Ollama models that declare embedding capability."""
+    try:
+        chat_client = create_client(st.session_state["ollama_endpoint"])
+        embedding_models = []
+
+        for model_name in _get_installed_model_names(chat_client):
+            details = chat_client.show(model_name)
+            capabilities = getattr(details, "capabilities", None) or details.get("capabilities", [])
+            if "embedding" in capabilities:
+                embedding_models.append(model_name)
+
+        st.session_state["ollama_embedding_models"] = embedding_models
+
+        if embedding_models:
+            if st.session_state.get("ollama_embedding_model") not in embedding_models:
+                st.session_state["ollama_embedding_model"] = embedding_models[0]
+            logs.log.info("Ollama embedding models loaded successfully")
+        else:
+            st.session_state["ollama_embedding_model"] = None
+            logs.log.warning("Ollama did not return any embedding-capable models")
+
+        return embedding_models
+    except Exception as err:
+        logs.log.error(f"Failed to retrieve Ollama embedding model list: {err}")
+        st.session_state["ollama_embedding_models"] = []
+        st.session_state["ollama_embedding_model"] = None
         return []
 
 
@@ -118,7 +146,7 @@ def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, requ
         return Settings.llm
     except Exception as e:
         logs.log.error(f"Error creating Ollama language model: {e}")
-        return None
+        raise
 
 
 ###################################

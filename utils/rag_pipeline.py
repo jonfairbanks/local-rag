@@ -1,7 +1,5 @@
 import os
-import sys
 import shutil
-import inspect
 
 import streamlit as st
 
@@ -11,7 +9,37 @@ import utils.llama_index as llama_index
 import utils.logs as logs
 
 
-def rag_pipeline(uploaded_files: list = None):
+def render_pipeline_status(status_container, completed_stages, active_stage=None):
+    """Render truthful ingestion progress for the currently running pipeline."""
+    if status_container is None:
+        return
+
+    status_container.empty()
+    with status_container.container():
+        for stage in completed_stages:
+            st.caption(f"✔️ {stage}")
+        if active_stage is not None:
+            st.caption(f"⏳ {active_stage}")
+
+
+def render_embedding_progress(status_container, completed_stages, completed, total):
+    """Render exact embedding progress for the active indexing stage."""
+    if status_container is None:
+        return
+
+    progress = 0 if total == 0 else min(completed / total, 1)
+    progress_label = f"Generating Embeddings — {progress:.0%}"
+
+    status_container.empty()
+    with status_container.container():
+        for stage in completed_stages:
+            st.caption(f"✔️ {stage}")
+        st.caption("⏳ Generating Embeddings")
+        st.progress(progress, text=progress_label)
+        st.caption(f"{completed:,} / {total:,} chunks embedded")
+
+
+def rag_pipeline(uploaded_files: list = None, documents: list = None, status_container=None):
     """
     RAG pipeline for Llama-based chatbots.
 
@@ -37,18 +65,9 @@ def rag_pipeline(uploaded_files: list = None):
         - Removes the loaded documents and any temporary files created during processing.
     """
     error = None
+    completed_stages = []
 
-    #################################
-    # (OPTIONAL) Save Files to Disk #
-    #################################
-
-    if uploaded_files is not None:
-        for uploaded_file in uploaded_files:
-            with st.spinner(f"Processing {uploaded_file.name}..."):
-                save_dir = os.getcwd() + "/data"
-                func.save_uploaded_file(uploaded_file, save_dir)
-
-        st.caption("✔️ Files Uploaded")
+    save_dir = os.path.join(os.getcwd(), "data")
 
     ######################################
     # Create Llama-Index service-context #
@@ -62,7 +81,8 @@ def rag_pipeline(uploaded_files: list = None):
             st.session_state["system_prompt"],
         )
         st.session_state["llm"] = llm
-        st.caption("✔️ LLM Initialized")
+        completed_stages.append("LLM Initialized")
+        render_pipeline_status(status_container, completed_stages)
 
         # resp = llm.complete("Hello!")
         # print(resp)
@@ -76,83 +96,107 @@ def rag_pipeline(uploaded_files: list = None):
     # Determine embedding model to use #
     ####################################
 
+    embedding_backend = st.session_state["embedding_backend"]
     embedding_model = st.session_state["embedding_model"]
-    hf_embedding_model = None
 
-    if embedding_model == None:
-        hf_embedding_model = "BAAI/bge-large-en-v1.5"
-
-    if embedding_model == "Default (bge-large-en-v1.5)":
-        hf_embedding_model = "BAAI/bge-large-en-v1.5"
-
-    if embedding_model == "Large (Salesforce/SFR-Embedding-Mistral)":
-        hf_embedding_model = "Salesforce/SFR-Embedding-Mistral"
-
-    if embedding_model == "Other":
-        hf_embedding_model = st.session_state["other_embedding_model"]
+    if embedding_backend == "Ollama":
+        selected_embedding_model = st.session_state["ollama_embedding_model"]
+    elif embedding_model is None or embedding_model == "Default (gte-modernbert-base)":
+        selected_embedding_model = "Alibaba-NLP/gte-modernbert-base"
+    elif embedding_model == "Higher Quality (Qwen3-Embedding-0.6B)":
+        selected_embedding_model = "Qwen/Qwen3-Embedding-0.6B"
+    elif embedding_model == "Other":
+        selected_embedding_model = st.session_state["other_embedding_model"]
+    else:
+        raise ValueError(f"Unsupported embedding model selection: {embedding_model}")
 
     try:
+        chunk_size = int(st.session_state["chunk_size"])
+        chunk_overlap = int(st.session_state["chunk_overlap"])
+        if chunk_size <= 0:
+            raise ValueError("Chunk Size must be > 0")
+        if chunk_overlap < 0:
+            raise ValueError("Chunk Overlap must be >= 0")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("Chunk Overlap must be less than Chunk Size")
+
         llama_index.setup_embedding_model(
-            hf_embedding_model,
+            selected_embedding_model,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            backend=embedding_backend,
+            ollama_endpoint=st.session_state["ollama_endpoint"],
         )
-        st.caption("✔️ Embedding Model Created")
+        completed_stages.append("Embedding Model Ready")
+        render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Setting up Embedding Model failed: {str(err)}")
         error = err
         st.exception(error)
         st.stop()
 
-    #######################################
-    # Load files from the data/ directory #
-    #######################################
+    try:
+        # Always reset the query engine before ingesting fresh source content.
+        st.session_state["query_engine"] = None
 
-    # if documents already exists in state
-    if (
-        st.session_state["documents"] is not None
-        and len(st.session_state["documents"]) > 0
-    ):
-        logs.log.info("Documents are already available; skipping document loading")
-        st.caption("✔️ Processed File Data")
-    else:
-        try:
-            save_dir = os.getcwd() + "/data"
-            documents = llama_index.load_documents(save_dir)
+        if documents is not None:
+            if len(documents) == 0:
+                raise ValueError("No documents were loaded from the selected source.")
             st.session_state["documents"] = documents
-            st.caption("✔️ Data Processed")
-        except Exception as err:
-            logs.log.error(f"Document Load Error: {str(err)}")
-            error = err
-            st.exception(error)
-            st.stop()
+            completed_stages.append("Documents Loaded")
+            render_pipeline_status(status_container, completed_stages)
+        else:
+            if uploaded_files is not None:
+                for uploaded_file in uploaded_files:
+                    with st.spinner(f"Processing {uploaded_file.name}..."):
+                        func.save_uploaded_file(uploaded_file, save_dir)
+                completed_stages.append("Files Uploaded")
+                render_pipeline_status(status_container, completed_stages)
+
+            ingested_documents = llama_index.load_documents(save_dir)
+            if len(ingested_documents) == 0:
+                raise ValueError("No files were found to process.")
+            st.session_state["documents"] = ingested_documents
+            completed_stages.append("Documents Loaded")
+            render_pipeline_status(status_container, completed_stages)
+    except Exception as err:
+        logs.log.error(f"Document Load Error: {str(err)}")
+        error = err
+        st.exception(error)
+        st.stop()
 
     ###########################################
     # Create an index from ingested documents #
     ###########################################
 
     try:
+        def update_embedding_progress(completed, total):
+            if total is None or total == 0:
+                render_pipeline_status(status_container, completed_stages, "Generating Embeddings")
+                return
+            render_embedding_progress(status_container, completed_stages, completed, total)
+
+        render_pipeline_status(status_container, completed_stages, "Generating Embeddings")
         llama_index.create_query_engine(
             st.session_state["documents"],
+            progress_callback=update_embedding_progress,
         )
-        st.caption("✔️ Created File Index")
+        completed_stages.append("Index Ready")
+        st.session_state["file_ingestion_stages"] = list(completed_stages)
+        render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")
         error = err
         st.exception(error)
         st.stop()
 
-    #####################
-    # Remove data files #
-    #####################
-
-    if len(st.session_state["file_list"]) > 0:
+    # Remove transient on-disk ingestion files (uploads/clones) after indexing.
+    if os.path.isdir(save_dir):
         try:
-            save_dir = os.getcwd() + "/data"
             shutil.rmtree(save_dir)
-            st.caption("✔️ Removed Temp Files")
         except Exception as err:
             logs.log.warning(
                 f"Unable to delete data files, you may want to clean-up manually: {str(err)}"
             )
-            pass
 
     return error  # If no errors occurred, None is returned

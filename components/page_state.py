@@ -2,10 +2,12 @@ import streamlit as st
 
 import utils.logs as logs
 
-from utils.ollama import get_models
+from utils.ollama import get_models, get_embedding_models
+from utils.browser_settings import restore_settings_from_browser_storage
 
 
 def set_initial_state():
+    restore_settings_from_browser_storage()
 
     ###########
     # General #
@@ -17,8 +19,14 @@ def set_initial_state():
     if "ollama_endpoint" not in st.session_state:
         st.session_state["ollama_endpoint"] = "http://localhost:11434"
 
+    if "embedding_backend" not in st.session_state:
+        st.session_state["embedding_backend"] = "Ollama"
+
+    if "ollama_embedding_model" not in st.session_state:
+        st.session_state["ollama_embedding_model"] = "embeddinggemma"
+
     if "embedding_model" not in st.session_state:
-        st.session_state["embedding_model"] = "Default (bge-large-en-v1.5)"
+        st.session_state["embedding_model"] = "Default (gte-modernbert-base)"
 
     if "ollama_models" not in st.session_state:
         try:
@@ -26,6 +34,14 @@ def set_initial_state():
             st.session_state["ollama_models"] = models
         except Exception:
             st.session_state["ollama_models"] = []
+            pass
+
+    if "ollama_embedding_models" not in st.session_state:
+        try:
+            models = get_embedding_models()
+            st.session_state["ollama_embedding_models"] = models
+        except Exception:
+            st.session_state["ollama_embedding_models"] = []
             pass
 
     if "selected_model" not in st.session_state:
@@ -60,6 +76,12 @@ def set_initial_state():
 
     if "file_list" not in st.session_state:
         st.session_state["file_list"] = []
+
+    if "processed_file_signature" not in st.session_state:
+        st.session_state["processed_file_signature"] = None
+
+    if "file_ingestion_stages" not in st.session_state:
+        st.session_state["file_ingestion_stages"] = []
 
     if "github_repo" not in st.session_state:
         st.session_state["github_repo"] = None

@@ -24,5 +24,5 @@ All options within the RAG pipeline are exposed to users after toggling `Setting
 
 | Setting           | Description                                                             | Default               |
 |-------------------|-------------------------------------------------------------------------|-----------------------|
-| Embedding Model   | Embedding model to be used for vectorize your files                     | bge-large-en-v1.5     |
+| Embedding Model   | Embedding model to be used for vectorize your files                     | gte-modernbert-base     |
 | Chunk Size        | Improves embedding precision by focusing on smaller text portions       | 1024                  |
