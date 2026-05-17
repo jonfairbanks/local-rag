@@ -8,6 +8,28 @@ import utils.ollama as ollama
 import utils.llama_index as llama_index
 import utils.logs as logs
 
+MAX_INGESTED_DOCUMENTS = 1000
+MAX_INGESTED_TEXT_CHARS = 10 * 1024 * 1024
+
+
+def _document_text(document):
+    if hasattr(document, "get_content"):
+        return document.get_content() or ""
+    if hasattr(document, "text"):
+        return document.text or ""
+    return str(document)
+
+
+def validate_ingested_documents(documents):
+    if len(documents) > MAX_INGESTED_DOCUMENTS:
+        raise ValueError(
+            f"Too many documents were loaded. Limit: {MAX_INGESTED_DOCUMENTS}."
+        )
+
+    total_chars = sum(len(_document_text(document)) for document in documents)
+    if total_chars > MAX_INGESTED_TEXT_CHARS:
+        raise ValueError("Loaded documents exceed the ingestion text limit.")
+
 
 def render_pipeline_status(status_container, completed_stages, active_stage=None):
     """Render truthful ingestion progress for the currently running pipeline."""
@@ -39,7 +61,31 @@ def render_embedding_progress(status_container, completed_stages, completed, tot
         st.caption(f"{completed:,} / {total:,} chunks embedded")
 
 
-def rag_pipeline(uploaded_files: list = None, documents: list = None, status_container=None):
+def render_completed_ingestion_status(status_container, completed_stages):
+    """Render final ingestion status without leaving stale progress widgets behind."""
+    if status_container is None:
+        return
+
+    status_container.empty()
+    with status_container.container():
+        for stage in completed_stages:
+            st.caption(f"✔️ {stage}")
+        # Replace the old progress-bar slots from the active embedding render.
+        # Streamlit can otherwise leave stale child elements visible for this
+        # run when the final render has fewer elements than the progress render.
+        st.empty()
+        st.empty()
+
+
+def rag_pipeline(
+    uploaded_files: list = None,
+    documents: list = None,
+    data_dir: str | None = None,
+    status_container=None,
+    initial_stages: list[str] | None = None,
+    status_state_key: str = "file_ingestion_stages",
+    documents_loaded_stage: str = "Documents Loaded",
+):
     """
     RAG pipeline for Llama-based chatbots.
 
@@ -65,9 +111,11 @@ def rag_pipeline(uploaded_files: list = None, documents: list = None, status_con
         - Removes the loaded documents and any temporary files created during processing.
     """
     error = None
-    completed_stages = []
+    completed_stages = list(initial_stages or [])
+    render_pipeline_status(status_container, completed_stages)
 
     save_dir = os.path.join(os.getcwd(), "data")
+    ingest_dir = data_dir or save_dir
 
     ######################################
     # Create Llama-Index service-context #
@@ -142,8 +190,9 @@ def rag_pipeline(uploaded_files: list = None, documents: list = None, status_con
         if documents is not None:
             if len(documents) == 0:
                 raise ValueError("No documents were loaded from the selected source.")
+            validate_ingested_documents(documents)
             st.session_state["documents"] = documents
-            completed_stages.append("Documents Loaded")
+            completed_stages.append(documents_loaded_stage)
             render_pipeline_status(status_container, completed_stages)
         else:
             if uploaded_files is not None:
@@ -153,11 +202,12 @@ def rag_pipeline(uploaded_files: list = None, documents: list = None, status_con
                 completed_stages.append("Files Uploaded")
                 render_pipeline_status(status_container, completed_stages)
 
-            ingested_documents = llama_index.load_documents(save_dir)
+            ingested_documents = llama_index.load_documents(ingest_dir)
             if len(ingested_documents) == 0:
                 raise ValueError("No files were found to process.")
+            validate_ingested_documents(ingested_documents)
             st.session_state["documents"] = ingested_documents
-            completed_stages.append("Documents Loaded")
+            completed_stages.append(documents_loaded_stage)
             render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Document Load Error: {str(err)}")
@@ -170,20 +220,28 @@ def rag_pipeline(uploaded_files: list = None, documents: list = None, status_con
     ###########################################
 
     try:
+
         def update_embedding_progress(completed, total):
             if total is None or total == 0:
-                render_pipeline_status(status_container, completed_stages, "Generating Embeddings")
+                render_pipeline_status(
+                    status_container, completed_stages, "Generating Embeddings"
+                )
                 return
-            render_embedding_progress(status_container, completed_stages, completed, total)
+            render_embedding_progress(
+                status_container, completed_stages, completed, total
+            )
 
-        render_pipeline_status(status_container, completed_stages, "Generating Embeddings")
+        render_pipeline_status(
+            status_container, completed_stages, "Generating Embeddings"
+        )
         llama_index.create_query_engine(
             st.session_state["documents"],
             progress_callback=update_embedding_progress,
         )
+        completed_stages.append("Embeddings Generated")
         completed_stages.append("Index Ready")
-        st.session_state["file_ingestion_stages"] = list(completed_stages)
-        render_pipeline_status(status_container, completed_stages)
+        st.session_state[status_state_key] = list(completed_stages)
+        render_completed_ingestion_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")
         error = err
