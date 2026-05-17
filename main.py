@@ -8,6 +8,7 @@ from components.sidebar import sidebar
 
 from components.page_config import set_page_config
 from components.page_state import set_initial_state
+from utils.browser_settings import persist_settings_to_browser_storage
 
 
 def generate_welcome_message(msg):
@@ -29,6 +30,9 @@ for msg in st.session_state["messages"]:
 
 ### Sidebar
 sidebar()
+
+### Browser-local settings persistence
+persist_settings_to_browser_storage()
 
 ### Chat Box
 chatbox()

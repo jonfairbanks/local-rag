@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      function sendMessageToStreamlitClient(type, data) {
+        window.parent.postMessage(
+          Object.assign({ isStreamlitMessage: true, type: type }, data),
+          "*"
+        );
+      }
+
+      function init() {
+        sendMessageToStreamlitClient("streamlit:componentReady", {
+          apiVersion: 1,
+        });
+        sendMessageToStreamlitClient("streamlit:setFrameHeight", { height: 0 });
+      }
+
+      function sendDataToPython(value) {
+        sendMessageToStreamlitClient("streamlit:setComponentValue", {
+          value: value,
+          dataType: "json",
+        });
+      }
+
+      function onDataFromPython(event) {
+        if (event.data.type !== "streamlit:render") return;
+
+        const args = event.data.args || {};
+        if (args.action === "get") {
+          sendDataToPython({ value: localStorage.getItem(args.storage_key) });
+        }
+        if (args.action === "set") {
+          localStorage.setItem(args.storage_key, args.value);
+          sendDataToPython(true);
+        }
+      }
+
+      window.addEventListener("message", onDataFromPython);
+      init();
+    </script>
+  </body>
+</html>
