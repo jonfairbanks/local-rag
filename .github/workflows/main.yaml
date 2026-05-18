@@ -43,14 +43,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          release_floor="v2.0.0"
           latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
           if [[ -z "$latest_tag" ]]; then
-            latest_tag="v1.3.1"
-          fi
+            new_tag="$release_floor"
+          else
+            version="${latest_tag#v}"
+            IFS='.' read -r major minor patch <<< "$version"
 
-          version="${latest_tag#v}"
-          IFS='.' read -r major minor patch <<< "$version"
-          new_tag="v${major}.${minor}.$((patch + 1))"
+            if (( major < 2 )); then
+              new_tag="$release_floor"
+            else
+              new_tag="v${major}.${minor}.$((patch + 1))"
+            fi
+          fi
 
           git tag "$new_tag"
           git push origin "$new_tag"
