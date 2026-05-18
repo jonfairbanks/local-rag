@@ -12,7 +12,6 @@ from pydantic import Field
 import utils.logs as logs
 
 from llama_index.core.embeddings import BaseEmbedding
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 # This is not used but required by llama-index and must be set FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
@@ -123,6 +122,8 @@ def setup_embedding_model(
                 device = "cpu" if not cuda.is_available() else "cuda"
             except Exception:
                 device = "cpu"
+            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
             logs.log.info(f"Using {device} to generate embeddings")
             Settings.embed_model = HuggingFaceEmbedding(
                 model_name=model,
