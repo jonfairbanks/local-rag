@@ -40,7 +40,21 @@ We use pull requests for all changes to our repository, even if you're just fixi
 
 6. Test your changes thoroughly
 
-Before submitting a pull request, please test your changes thoroughly to ensure they work as expected. This includes running unit tests, integration tests, and any other relevant tests to verify that your changes do not break existing functionality.
+Before submitting a pull request, please test your changes thoroughly to ensure they work as expected. Run focused tests while iterating, then run the full local suite before handing off:
+
+```bash
+pipenv run python -m unittest discover -s tests
+pipenv run python -m py_compile main.py components/page_state.py components/tabs/settings.py utils/browser_settings.py utils/ollama.py
+```
+
+For a Streamlit smoke test:
+
+```bash
+pipenv run streamlit run main.py --server.headless=true --server.port=8520 --server.address=127.0.0.1
+curl -s http://127.0.0.1:8520/_stcore/health
+```
+
+Stop the smoke-test Streamlit process after checking the health endpoint.
 
 7. Follow the issue tracking process
 
