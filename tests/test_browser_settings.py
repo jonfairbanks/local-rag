@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -142,6 +143,36 @@ class BrowserSettingsTests(unittest.TestCase):
                 "selected_model": "gemma4:latest",
             },
         )
+
+    def test_persist_skips_redundant_component_write_for_same_settings(self):
+        state = {
+            "browser_settings_restored": True,
+            "ollama_endpoint": "http://192.168.4.2:11434",
+            "selected_model": "gemma4:latest",
+        }
+        storage_component = Mock()
+
+        with patch("utils.browser_settings.st", SimpleNamespace(session_state=state)), patch(
+            "utils.browser_settings._browser_storage_component", storage_component
+        ):
+            persist_settings_to_browser_storage()
+            persist_settings_to_browser_storage()
+
+        storage_component.assert_called_once()
+
+    def test_browser_storage_set_action_does_not_emit_component_value(self):
+        component_html = (
+            Path(__file__).resolve().parents[1]
+            / "utils"
+            / "browser_storage_component"
+            / "index.html"
+        ).read_text()
+
+        set_branch = component_html.split('if (args.action === "set") {', 1)[1]
+        set_branch = set_branch.split("}", 1)[0]
+
+        self.assertIn("localStorage.setItem", set_branch)
+        self.assertNotIn("sendDataToPython", set_branch)
 
     def test_restore_stops_until_browser_local_storage_payload_is_available(self):
         state = {}

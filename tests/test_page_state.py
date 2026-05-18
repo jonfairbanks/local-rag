@@ -39,6 +39,22 @@ class PageStateTests(unittest.TestCase):
 
         self.assertIsNone(state["ollama_embedding_model"])
 
+    def test_ensure_valid_model_selections_prefers_embeddinggemma_latest(self):
+        state = {
+            "selected_model": "gemma4:latest",
+            "ollama_models": ["gemma4:latest"],
+            "embedding_backend": "Ollama",
+            "ollama_embedding_model": "missing:latest",
+            "ollama_embedding_models": [
+                "nomic-embed-text:latest",
+                "embeddinggemma:latest",
+            ],
+        }
+
+        ensure_valid_model_selections(state)
+
+        self.assertEqual(state["ollama_embedding_model"], "embeddinggemma:latest")
+
     def test_initial_state_uses_persisted_endpoint_before_model_discovery(self):
         state = {}
 
@@ -74,6 +90,34 @@ class PageStateTests(unittest.TestCase):
         )
         self.assertEqual(state["selected_model"], "gemma4:latest")
         self.assertEqual(state["ollama_embedding_model"], "embeddinggemma")
+
+    def test_initial_state_replaces_empty_live_endpoint_before_model_discovery(self):
+        state = {
+            "browser_settings_restored": True,
+            "ollama_endpoint": "",
+            "selected_model": "gemma4:latest",
+            "embedding_backend": "Ollama",
+            "ollama_embedding_model": "embeddinggemma",
+        }
+
+        with patch("components.page_state.st.session_state", state), patch(
+            "components.page_state.restore_settings_from_browser_storage"
+        ), patch(
+            "components.page_state.get_models", return_value=["gemma4:latest"]
+        ) as get_models, patch(
+            "components.page_state.get_embedding_models",
+            return_value=["embeddinggemma"],
+        ) as get_embedding_models:
+            set_initial_state()
+
+        get_models.assert_called_once()
+        get_embedding_models.assert_called_once()
+        self.assertEqual(state["ollama_endpoint"], "http://localhost:11434")
+        self.assertEqual(state["ollama_models_endpoint"], "http://localhost:11434")
+        self.assertEqual(
+            state["ollama_embedding_models_endpoint"],
+            "http://localhost:11434",
+        )
 
 
 if __name__ == "__main__":

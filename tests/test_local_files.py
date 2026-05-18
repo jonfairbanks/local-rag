@@ -34,13 +34,54 @@ class UploadedFilesSignatureTests(unittest.TestCase):
 
 class ShouldProcessUploadsTests(unittest.TestCase):
     def test_reuses_existing_index_for_same_uploads(self):
-        self.assertFalse(should_process_uploads(("same",), ("same",), object()))
+        self.assertFalse(
+            should_process_uploads(
+                current_signature=("same",),
+                processed_signature=("same",),
+                processing_signature=None,
+                query_engine=object(),
+            )
+        )
 
     def test_reprocesses_when_index_is_missing(self):
-        self.assertTrue(should_process_uploads(("same",), ("same",), None))
+        self.assertTrue(
+            should_process_uploads(
+                current_signature=("same",),
+                processed_signature=("same",),
+                processing_signature=None,
+                query_engine=None,
+            )
+        )
 
     def test_reprocesses_when_uploads_change(self):
-        self.assertTrue(should_process_uploads(("new",), ("old",), object()))
+        self.assertTrue(
+            should_process_uploads(
+                current_signature=("new",),
+                processed_signature=("old",),
+                processing_signature=None,
+                query_engine=object(),
+            )
+        )
+
+    def test_skips_duplicate_run_while_same_upload_is_processing(self):
+        self.assertFalse(
+            should_process_uploads(
+                current_signature=("same",),
+                processed_signature=None,
+                processing_signature=("same",),
+                query_engine=None,
+            )
+        )
+
+    def test_retries_same_upload_when_no_processing_run_is_active(self):
+        self.assertTrue(
+            should_process_uploads(
+                current_signature=("same",),
+                processed_signature=("same",),
+                processing_signature=None,
+                query_engine=None,
+            )
+        )
 
 
 class UploadLimitHelpTextTests(unittest.TestCase):
