@@ -65,6 +65,20 @@ def _get_installed_model_names(chat_client):
     return models
 
 
+def default_embedding_model(models):
+    """Return the preferred default embedding model from discovered Ollama models."""
+    preferred_models = ("embeddinggemma:latest",)
+
+    for model in preferred_models:
+        if model in models:
+            return model
+
+    if models:
+        return models[0]
+
+    return None
+
+
 def get_models():
     """Return installed Ollama models that declare completion capability."""
     try:
@@ -86,6 +100,7 @@ def get_models():
         return models
     except Exception as err:
         logs.log.error(f"Failed to retrieve Ollama model list: {err}")
+        st.session_state["ollama_models"] = []
         return []
 
 
@@ -105,7 +120,9 @@ def get_embedding_models():
 
         if embedding_models:
             if st.session_state.get("ollama_embedding_model") not in embedding_models:
-                st.session_state["ollama_embedding_model"] = embedding_models[0]
+                st.session_state["ollama_embedding_model"] = default_embedding_model(
+                    embedding_models
+                )
             logs.log.info("Ollama embedding models loaded successfully")
         else:
             logs.log.warning("Ollama did not return any embedding-capable models")
