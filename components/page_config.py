@@ -2,6 +2,9 @@ import streamlit as st
 
 
 def set_page_config():
+    if "sidebar_state" not in st.session_state:
+        st.session_state["sidebar_state"] = "expanded"
+
     st.set_page_config(
         page_title="Local RAG",
         page_icon="📚",

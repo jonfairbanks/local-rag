@@ -16,11 +16,12 @@ def generate_welcome_message(msg):
         yield char
 
 
+### Page Setup
+set_page_config()
+
 ### Setup Initial State
 set_initial_state()
 
-### Page Setup
-set_page_config()
 set_page_header()
 
 for msg in st.session_state["messages"]:

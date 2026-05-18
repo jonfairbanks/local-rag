@@ -1,18 +1,48 @@
-# RAG (Retriever-Augmented Generator) Pipeline in Local RAG
+# RAG Pipeline
 
-The RAG pipeline in Local RAG utilizes the `SimpleDirectoryReader()` function from the `llama-index` library, which allows us to pass a folder containing various files. The reader then iterates through each file and selects an appropriate handler and vectorizer based on the file type (e.g. PDF, MD, IPYNB, ...).
+Local RAG builds an in-memory LlamaIndex query engine from one source at a time: local file uploads, a GitHub repository clone, or fetched website documents.
 
-## File Processing and Embedding
+## Ingestion Flow
 
-For each file, the pipeline creates multiple documents from a single file. For instance, when given a multi-page PDF, it splits it into one document per page. The documents are then chunked and embedded using the default settings provided by `llama-index`. However, users have the flexibility to customize these settings via the user interface, allowing them to experiment with different configurations.
+1. Validate the current Ollama chat model and embedding settings.
+2. Initialize the selected Ollama chat model.
+3. Configure the selected embedding backend:
+   - Ollama embeddings through the configured Ollama endpoint
+   - Local Hugging Face embeddings through `llama-index-embeddings-huggingface`
+4. Load documents:
+   - Local files and GitHub repositories are loaded with LlamaIndex `SimpleDirectoryReader`.
+   - Websites are fetched with request size, redirect, content type, and network guardrails, then converted to text.
+5. Validate ingestion limits:
+   - At most 1,000 loaded documents
+   - At most 10 MB of loaded source text
+6. Split documents into chunks using the configured chunk size and chunk overlap.
+7. Generate embeddings and display exact progress while indexing.
+8. Create a streaming LlamaIndex query engine with the configured `top_k` and response mode.
+9. Remove transient on-disk ingestion files from `data/`.
 
-## Key Parameters for Customization
+## Source-Specific Stages
 
-Users can manipulate a few key parameters in the pipeline:
+The UI stores completed ingestion stages in Streamlit session state so reruns can show the current status without reprocessing unchanged inputs.
 
-1. **`chunk_size`**: This parameter determines the size of each text chunk. Smaller chunk sizes generally result in higher embedding quality, albeit at the cost of increased computation.
-2. **`chunk_overlap`**: This parameter sets the amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.
+- Local files: files uploaded, documents loaded, embeddings generated, index ready
+- GitHub repositories: repository validated, repository cloned, repository files loaded, embeddings generated, index ready
+- Websites: websites fetched, website content loaded, embeddings generated, index ready
 
-## Experimentation and Balancing Parameters
+## Key Parameters
 
-While experimenting with different `chunk_size` values, users should consider their system's capabilities and available resources. It is essential to find a balance between chunk size and other parameters like `chunk_overlap`. Although setting a higher overlap value does not have any strict limitations, it is generally recommended to maintain it as a proportion relative to the chunk size for optimal performance and continuity in the generated text.
+Users can adjust these advanced settings:
+
+1. **`top_k`**: Number of similar chunks retrieved for each query. Higher values provide more context but may add noise.
+2. **`chunk_size`**: Maximum size of each text chunk before embedding. Smaller chunks can improve precision but increase embedding work.
+3. **`chunk_overlap`**: Overlap between consecutive chunks. This must be greater than or equal to `0` and less than `chunk_size`.
+4. **`chat_mode`**: LlamaIndex response mode. The current UI exposes this setting as disabled and defaults to `compact`.
+
+## Runtime State
+
+A successful RAG conversation requires:
+
+- `llm`: the initialized Ollama LLM
+- `documents`: loaded source documents
+- `query_engine`: the LlamaIndex query engine
+
+If any of these are missing, ingestion did not complete and chat is blocked until data is imported successfully.

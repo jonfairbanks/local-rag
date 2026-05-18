@@ -42,9 +42,9 @@ Although not final, items are generally sorted from highest to lowest priority.
     - [ ] chunk_overlap (needs to be proportional to chunk_size?)
 - [ ] Additional Error Handling
     - [x] Starting a chat without an Ollama model set
-    - [ ] Non-existent GitHub repos
+    - [x] Non-existent GitHub repos
     - [ ] Non-existent Embedding models
-    - [ ] Non-existent Websites
+    - [x] Non-existent Websites
     - [ ] System Level Errors (CUDA OOM, Hugging Face downtime, ...)
 
 ### Code Quality
@@ -55,12 +55,12 @@ Although not final, items are generally sorted from highest to lowest priority.
 - [x] Implement Log Library
 - [x] Improve Logging
 - [x] Re-write Docstrings
-- [ ] Tests
+- [x] Tests
 
 ### Known Issues & Bugs
 
 - [x] Upon sending a Chat message, the File Processing expander appears to re-run itself (seems something is not using state correctly)
-- [ ] Refreshing the page loses all state (expected Streamlit behavior; need to implement local-storage)
+- [x] Settings are restored from browser localStorage after refresh
 - [x] Files can be uploaded before Ollama config is set, leading to embedding errors
 - [x] Assuming Ollama is hosted on localhost, Models are automatically loaded and selected, but the dropdown does not render the selected option
 

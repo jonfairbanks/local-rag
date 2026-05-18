@@ -3,8 +3,28 @@ import json
 import streamlit as st
 
 import utils.ollama as ollama
+from components.page_state import default_chat_model
+from utils.browser_settings import ensure_ollama_endpoint
 
 from datetime import datetime
+
+
+def _refresh_models():
+    ensure_ollama_endpoint(st.session_state)
+    ollama.get_models()
+    ollama.get_embedding_models()
+    if st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
+        st.session_state["selected_model"] = default_chat_model(
+            st.session_state["ollama_models"]
+        )
+    st.session_state["ollama_models_endpoint"] = st.session_state["ollama_endpoint"]
+    st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
+
+
+def _refresh_embedding_models():
+    ensure_ollama_endpoint(st.session_state)
+    ollama.get_embedding_models()
+    st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
 
 
 def settings():
@@ -18,18 +38,19 @@ def settings():
             "Ollama Endpoint",
             key="ollama_endpoint",
             placeholder="http://localhost:11434",
-            on_change=ollama.get_models,
+            on_change=_refresh_models,
         )
         st.selectbox(
-            "Model",
+            "Chat Model",
             st.session_state["ollama_models"],
             key="selected_model",
             disabled= len(st.session_state["ollama_models"])==0,
-            placeholder= "Select Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
+            placeholder= "Select Chat Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
         st.button(
-            "Refresh",
-            on_click=ollama.get_models,
+            "Refresh Models",
+            key="refresh_chat_models",
+            on_click=_refresh_models,
         )
         if st.session_state["advanced"] == True:
             st.select_slider(
@@ -66,21 +87,45 @@ def settings():
     )
     embedding_settings = st.container(border=True)
     with embedding_settings:
-        embedding_model = st.selectbox(
-            "Model",
-            [
-                "Default (bge-large-en-v1.5)",
-                "Large (Salesforce/SFR-Embedding-Mistral)",
-                "Other",
-            ],
-            key="embedding_model",
+        embedding_backend = st.selectbox(
+            "Backend",
+            ["Ollama", "Local Hugging Face"],
+            key="embedding_backend",
         )
-        if embedding_model == "Other":
-            st.text_input(
-                "HuggingFace Model",
-                key="other_embedding_model",
-                placeholder="Salesforce/SFR-Embedding-Mistral",
+        if embedding_backend == "Ollama":
+            st.selectbox(
+                "Embedding Model",
+                st.session_state["ollama_embedding_models"],
+                key="ollama_embedding_model",
+                disabled=len(st.session_state["ollama_embedding_models"]) == 0,
+                placeholder=(
+                    "Select Model"
+                    if len(st.session_state["ollama_embedding_models"]) > 0
+                    else "No Embedding Models Available"
+                ),
             )
+            st.button(
+                "Refresh Models",
+                key="refresh_embedding_models",
+                on_click=_refresh_embedding_models,
+            )
+            st.caption("Need one? Pull an Ollama embedding model first, e.g. `ollama pull embeddinggemma`.")
+        else:
+            embedding_model = st.selectbox(
+                "Model",
+                [
+                    "Default (gte-modernbert-base)",
+                    "Higher Quality (Qwen3-Embedding-0.6B)",
+                    "Other",
+                ],
+                key="embedding_model",
+            )
+            if embedding_model == "Other":
+                st.text_input(
+                    "HuggingFace Model",
+                    key="other_embedding_model",
+                    placeholder="Qwen/Qwen3-Embedding-0.6B",
+                )
         if st.session_state["advanced"] == True:
             st.caption(
                 "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
