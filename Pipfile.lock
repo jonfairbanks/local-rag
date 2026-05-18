@@ -3892,11 +3892,12 @@
         },
         "twisted": {
             "hashes": [
-                "sha256:1deb272358cb6be1e3e8fc6f9c8b36f78eb0fa7c2233d2dbe11ec6fee04ea316",
-                "sha256:8559f654d01a54a8c3efe66d533d43f383531ebf8d81d9f9ab4769d91ca15df7"
+                "sha256:41eeb62a7f2688c634f7a1af76e225c58da48f8af1640fcb285ce386a96889e2",
+                "sha256:d1db6c391a1b6e70028c3212298178621db149a6f75555f6503da557c763406d"
             ],
-            "markers": "python_full_version >= '3.8.0'",
-            "version": "==25.5.0"
+            "index": "pypi",
+            "markers": "python_full_version >= '3.9.12'",
+            "version": "==26.4.0rc2"
         },
         "typer": {
             "hashes": [
