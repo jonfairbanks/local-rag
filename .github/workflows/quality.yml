@@ -1,0 +1,62 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests and compile checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+          cache: pipenv
+
+      - name: Install Pipenv
+        run: python -m pip install --upgrade pipenv
+
+      - name: Install dependencies
+        run: pipenv sync --dev
+
+      - name: Run unit tests
+        run: pipenv run python -m unittest discover -s tests
+
+      - name: Compile checked modules
+        run: >
+          pipenv run python -m py_compile
+          main.py
+          components/page_state.py
+          components/tabs/settings.py
+          utils/browser_settings.py
+          utils/ollama.py
+
+  lint:
+    name: Static warning checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Install Ruff
+        run: python -m pip install --upgrade ruff
+
+      - name: Run Ruff
+        run: ruff check . --select E9,F63,F7,F82

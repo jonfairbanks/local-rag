@@ -13,16 +13,19 @@ pycryptodome = "*"
 nbconvert = "*"
 pyexiftool = "*"
 llama-index-readers-web = "*"
+llama-index-readers-file = "*"
 html2text = "*"
 streamlit-tags = "*"
 streamlit-extras = "*"
 black = "*"
-torch = { version = "*", sys_platform = "!= 'darwin'" }
+torch = "*"
+torchvision = "*"
 colorama = { version = "*", sys_platform = "== 'win32'" }
 ebooklib = "*"
 llama-index-core = "*"
+fsspec = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+python_version = "3.14"

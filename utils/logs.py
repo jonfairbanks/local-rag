@@ -23,6 +23,10 @@ def setup_logger(
     logger = logging.getLogger(__name__)
     logger.setLevel(level)
 
+    # Streamlit reloads modules frequently; prevent duplicate handlers.
+    if logger.handlers:
+        return logger
+
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(level)
 

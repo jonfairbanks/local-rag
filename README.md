@@ -1,4 +1,4 @@
-# 📚 Local RAG
+# Local RAG
 
 ![local-rag-demo](demo.gif)
 
@@ -7,20 +7,22 @@
 ![GitHub Last Commit](https://img.shields.io/github/last-commit/jonfairbanks/local-rag)
 ![GitHub License](https://img.shields.io/github/license/jonfairbanks/local-rag)
 
-Offline, Open-Source RAG
+Offline, open-source retrieval augmented generation.
 
-Ingest files for retrieval augmented generation (RAG) with open-source Large Language Models (LLMs), all without 3rd parties or sensitive data leaving your network.
+Ingest local files, GitHub repositories, and websites for retrieval augmented generation (RAG) with local Ollama models. Local RAG keeps chat, embeddings, and indexed source content on your machine or network.
 
 Features:
 
-- Offline Embeddings & LLMs Support (No OpenAI!)
-- Support for Multiple Sources
-    - Local Files
-    - GitHub Repos
-    - Websites
-- Streaming Responses
-- Conversational Memory
-- Chat Export
+- Local Ollama chat models
+- Ollama or local Hugging Face embedding models
+- Multiple ingestion sources:
+  - Local files
+  - GitHub repositories
+  - Websites
+- Streaming RAG responses through LlamaIndex
+- Browser-local settings persistence
+- Chat history export
+- Upload, URL, repository, and ingestion guardrails
 
 Learn More:
 
@@ -32,3 +34,5 @@ Learn More:
 - [Known Bugs & Issues](docs/todo.md#known-issues--bugs)
 - [Resources](docs/resources.md)
 - [Contributing](docs/contributing.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
