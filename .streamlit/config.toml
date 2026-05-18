@@ -3,3 +3,8 @@ gatherUsageStats = false
 
 [server]
 maxUploadSize = 25
+
+#https://docs.streamlit.io/develop/concepts/configuration/https-support
+#[server]
+#sslCertFile = '/path/to/certchain.pem'
+#sslKeyFile = '/path/to/private.key'
