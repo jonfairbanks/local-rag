@@ -24,7 +24,7 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Remove unnecessary files
         run: |
@@ -33,6 +33,28 @@ jobs:
       - name: Checkout source code
         id: checkout-code
         uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and push tag
+        id: bump-tag
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          if [[ -z "$latest_tag" ]]; then
+            latest_tag="v1.3.1"
+          fi
+
+          version="${latest_tag#v}"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_tag="v${major}.${minor}.$((patch + 1))"
+
+          git tag "$new_tag"
+          git push origin "$new_tag"
+          echo "new_tag=${new_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker Tags
         id: docker-tags
@@ -42,7 +64,7 @@ jobs:
           elif [[ "${{ github.ref_name }}" = "develop" ]]; then
             TAGS="${{ github.repository }}:develop"
           elif [[ "${{ github.ref_name }}" = "main" || "${{ github.ref_name }}" = "master" ]]; then
-            TAGS="${{ github.repository }}:latest"
+            TAGS="${{ github.repository }}:${{ steps.bump-tag.outputs.new_tag }},${{ github.repository }}:latest"
           fi
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
