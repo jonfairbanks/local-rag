@@ -47,8 +47,15 @@ def uploaded_files_signature(uploaded_files):
     )
 
 
-def should_process_uploads(current_signature, processed_signature, query_engine):
+def should_process_uploads(
+    current_signature,
+    processed_signature,
+    processing_signature,
+    query_engine,
+):
     """Return whether uploaded files need ingestion for the current app state."""
+    if current_signature == processing_signature:
+        return False
     return current_signature != processed_signature or query_engine is None
 
 
@@ -84,6 +91,7 @@ def local_files():
         needs_processing = should_process_uploads(
             current_upload_signature,
             st.session_state["processed_file_signature"],
+            st.session_state["processing_file_signature"],
             st.session_state["query_engine"],
         )
 
@@ -91,18 +99,24 @@ def local_files():
 
         if needs_processing:
             with st.spinner("Processing..."):
-                # Initiate the RAG pipeline only for new file contents or missing index state.
-                error = rag.rag_pipeline(
-                    uploaded_files, status_container=status_container
+                st.session_state["processing_file_signature"] = (
+                    current_upload_signature
                 )
-
-                # Display errors (if any) or proceed
-                if error is not None:
-                    st.exception(error)
-                else:
-                    st.session_state["processed_file_signature"] = (
-                        current_upload_signature
+                try:
+                    # Initiate the RAG pipeline only for new file contents or missing index state.
+                    error = rag.rag_pipeline(
+                        uploaded_files, status_container=status_container
                     )
+
+                    # Display errors (if any) or proceed
+                    if error is not None:
+                        st.exception(error)
+                    else:
+                        st.session_state["processed_file_signature"] = (
+                            current_upload_signature
+                        )
+                finally:
+                    st.session_state["processing_file_signature"] = None
         else:
             rag.render_pipeline_status(
                 status_container,

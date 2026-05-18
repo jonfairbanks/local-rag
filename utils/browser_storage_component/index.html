@@ -31,8 +31,9 @@
           sendDataToPython({ value: localStorage.getItem(args.storage_key) });
         }
         if (args.action === "set") {
-          localStorage.setItem(args.storage_key, args.value);
-          sendDataToPython(true);
+          if (localStorage.getItem(args.storage_key) !== args.value) {
+            localStorage.setItem(args.storage_key, args.value);
+          }
         }
       }
 

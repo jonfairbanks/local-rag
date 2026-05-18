@@ -2,8 +2,9 @@ import streamlit as st
 
 import utils.logs as logs
 
-from utils.ollama import get_models, get_embedding_models
+from utils.ollama import default_embedding_model, get_models, get_embedding_models
 from utils.browser_settings import (
+    ensure_ollama_endpoint,
     restore_settings_from_browser_storage,
     should_refresh_models_for_endpoint,
 )
@@ -36,9 +37,7 @@ def ensure_valid_model_selections(state):
     if state.get("embedding_backend") == "Ollama":
         embedding_models = state.get("ollama_embedding_models", [])
         if state.get("ollama_embedding_model") not in embedding_models:
-            state["ollama_embedding_model"] = (
-                embedding_models[0] if embedding_models else None
-            )
+            state["ollama_embedding_model"] = default_embedding_model(embedding_models)
 
 
 def set_initial_state():
@@ -51,14 +50,13 @@ def set_initial_state():
     if "sidebar_state" not in st.session_state:
         st.session_state["sidebar_state"] = "expanded"
 
-    if "ollama_endpoint" not in st.session_state:
-        st.session_state["ollama_endpoint"] = "http://localhost:11434"
+    ensure_ollama_endpoint(st.session_state)
 
     if "embedding_backend" not in st.session_state:
         st.session_state["embedding_backend"] = "Ollama"
 
     if "ollama_embedding_model" not in st.session_state:
-        st.session_state["ollama_embedding_model"] = "embeddinggemma"
+        st.session_state["ollama_embedding_model"] = "embeddinggemma:latest"
 
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = "Default (gte-modernbert-base)"
@@ -105,6 +103,9 @@ def set_initial_state():
 
     if "processed_file_signature" not in st.session_state:
         st.session_state["processed_file_signature"] = None
+
+    if "processing_file_signature" not in st.session_state:
+        st.session_state["processing_file_signature"] = None
 
     if "file_ingestion_stages" not in st.session_state:
         st.session_state["file_ingestion_stages"] = []

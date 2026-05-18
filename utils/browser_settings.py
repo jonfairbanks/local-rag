@@ -19,6 +19,8 @@ PERSISTED_SETTING_TYPES = {
     "advanced": bool,
 }
 BROWSER_STORAGE_KEY = "local-rag:settings"
+DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11434"
+PERSISTED_SETTINGS_HASH_STATE_KEY = "browser_settings_persisted_hash"
 _COMPONENT_PATH = os.path.join(os.path.dirname(__file__), "browser_storage_component")
 _browser_storage_component = components.declare_component(
     "browser_storage", path=_COMPONENT_PATH
@@ -37,14 +39,30 @@ def _coerce_bool(value):
     raise ValueError("invalid boolean")
 
 
+def normalize_ollama_endpoint(value):
+    """Return a usable Ollama endpoint, falling back when the value is blank."""
+    if value is None:
+        return DEFAULT_OLLAMA_ENDPOINT
+    endpoint = str(value).strip()
+    return endpoint or DEFAULT_OLLAMA_ENDPOINT
+
+
+def ensure_ollama_endpoint(state):
+    """Keep the live Ollama endpoint usable even if a widget submits an empty value."""
+    state["ollama_endpoint"] = normalize_ollama_endpoint(state.get("ollama_endpoint"))
+    return state["ollama_endpoint"]
+
+
 def apply_persisted_settings(state, raw_settings):
     """Apply valid browser-persisted settings before defaults initialize."""
     for key, expected_type in PERSISTED_SETTING_TYPES.items():
         if key not in raw_settings:
             continue
         raw_value = raw_settings[key]
-        if key == "ollama_endpoint" and raw_value == "":
-            continue
+        if key == "ollama_endpoint":
+            if raw_value is None or str(raw_value).strip() == "":
+                continue
+            raw_value = str(raw_value).strip()
         try:
             if expected_type is bool:
                 value = _coerce_bool(raw_value)
@@ -96,7 +114,7 @@ def option_index(options, selected_value):
 
 def should_refresh_models_for_endpoint(state, models_key):
     """Return whether cached Ollama models belong to a different endpoint."""
-    endpoint = state.get("ollama_endpoint")
+    endpoint = normalize_ollama_endpoint(state.get("ollama_endpoint"))
     endpoint_key = f"{models_key}_endpoint"
     return models_key not in state or state.get(endpoint_key) != endpoint
 
@@ -132,6 +150,10 @@ def persist_settings_to_browser_storage():
     storage_hash = hashlib.sha256(
         json.dumps(serialized, sort_keys=True).encode("utf-8")
     ).hexdigest()[:12]
+    if st.session_state.get(PERSISTED_SETTINGS_HASH_STATE_KEY) == storage_hash:
+        return
+
+    st.session_state[PERSISTED_SETTINGS_HASH_STATE_KEY] = storage_hash
     _browser_storage_component(
         action="set",
         storage_key=BROWSER_STORAGE_KEY,

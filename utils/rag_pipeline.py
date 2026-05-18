@@ -112,6 +112,10 @@ def rag_pipeline(
     """
     error = None
     completed_stages = list(initial_stages or [])
+
+    def record_completed_stages():
+        st.session_state[status_state_key] = list(completed_stages)
+
     render_pipeline_status(status_container, completed_stages)
 
     save_dir = os.path.join(os.getcwd(), "data")
@@ -130,6 +134,7 @@ def rag_pipeline(
         )
         st.session_state["llm"] = llm
         completed_stages.append("LLM Initialized")
+        record_completed_stages()
         render_pipeline_status(status_container, completed_stages)
 
         # resp = llm.complete("Hello!")
@@ -176,6 +181,7 @@ def rag_pipeline(
             ollama_endpoint=st.session_state["ollama_endpoint"],
         )
         completed_stages.append("Embedding Model Ready")
+        record_completed_stages()
         render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Setting up Embedding Model failed: {str(err)}")
@@ -193,6 +199,7 @@ def rag_pipeline(
             validate_ingested_documents(documents)
             st.session_state["documents"] = documents
             completed_stages.append(documents_loaded_stage)
+            record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
         else:
             if uploaded_files is not None:
@@ -200,6 +207,7 @@ def rag_pipeline(
                     with st.spinner(f"Processing {uploaded_file.name}..."):
                         func.save_uploaded_file(uploaded_file, save_dir)
                 completed_stages.append("Files Uploaded")
+                record_completed_stages()
                 render_pipeline_status(status_container, completed_stages)
 
             ingested_documents = llama_index.load_documents(ingest_dir)
@@ -208,6 +216,7 @@ def rag_pipeline(
             validate_ingested_documents(ingested_documents)
             st.session_state["documents"] = ingested_documents
             completed_stages.append(documents_loaded_stage)
+            record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Document Load Error: {str(err)}")
@@ -240,7 +249,7 @@ def rag_pipeline(
         )
         completed_stages.append("Embeddings Generated")
         completed_stages.append("Index Ready")
-        st.session_state[status_state_key] = list(completed_stages)
+        record_completed_stages()
         render_completed_ingestion_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")

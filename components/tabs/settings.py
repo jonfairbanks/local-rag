@@ -4,12 +4,13 @@ import streamlit as st
 
 import utils.ollama as ollama
 from components.page_state import default_chat_model
-from utils.browser_settings import option_index
+from utils.browser_settings import ensure_ollama_endpoint
 
 from datetime import datetime
 
 
 def _refresh_models():
+    ensure_ollama_endpoint(st.session_state)
     ollama.get_models()
     ollama.get_embedding_models()
     if st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
@@ -21,6 +22,7 @@ def _refresh_models():
 
 
 def _refresh_embedding_models():
+    ensure_ollama_endpoint(st.session_state)
     ollama.get_embedding_models()
     st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
 
@@ -42,10 +44,6 @@ def settings():
             "Chat Model",
             st.session_state["ollama_models"],
             key="selected_model",
-            index=option_index(
-                st.session_state["ollama_models"],
-                st.session_state.get("selected_model"),
-            ),
             disabled= len(st.session_state["ollama_models"])==0,
             placeholder= "Select Chat Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
@@ -99,10 +97,6 @@ def settings():
                 "Embedding Model",
                 st.session_state["ollama_embedding_models"],
                 key="ollama_embedding_model",
-                index=option_index(
-                    st.session_state["ollama_embedding_models"],
-                    st.session_state.get("ollama_embedding_model"),
-                ),
                 disabled=len(st.session_state["ollama_embedding_models"]) == 0,
                 placeholder=(
                     "Select Model"
