@@ -1954,11 +1954,12 @@
         },
         "nltk": {
             "hashes": [
-                "sha256:ed03bc098a40481310320808b2db712d95d13ca65b27372f8a403949c8b523d0",
-                "sha256:f2fa301c3a12718ce4a0e9305c5675299da5ad9e26068218b69d692fda84828f"
+                "sha256:4fbac1d98203cbcd1b5d94a2877fb822300072d80604a5e7fae49d2c5f84e8c1",
+                "sha256:54ff84d4916d3ef127e8953bee0023f6a6b320b75d634a19e06ef056d3d244bf"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.10'",
-            "version": "==3.9.4"
+            "version": "==3.10.0"
         },
         "numpy": {
             "hashes": [
@@ -4004,11 +4005,11 @@
         },
         "tqdm": {
             "hashes": [
-                "sha256:00dfa48452b6b6cfae3dd9885636c23d3422d1ec97c66d96818cbd5e0821d482",
-                "sha256:39832cc2def2789a6f29df83f172db7416cea70052c0907a57801c5f2fdccb03"
+                "sha256:19829c9673638f2a0b8617da4cdcb927e831cd88bcfcb6e78d42a4d1af131520",
+                "sha256:5168118b2368f48c561afda8020fd79195b1bdb0bdf8086b88442c267a315dc2"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==4.68.3"
+            "version": "==4.68.4"
         },
         "traitlets": {
             "hashes": [
