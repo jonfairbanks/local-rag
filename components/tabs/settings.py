@@ -5,6 +5,7 @@ import streamlit as st
 import utils.ollama as ollama
 from components.page_state import default_chat_model
 from utils.browser_settings import ensure_ollama_endpoint
+from utils.settings_validation import HF_MODELS
 
 from datetime import datetime
 
@@ -38,6 +39,7 @@ def settings():
             "Ollama Endpoint",
             key="ollama_endpoint",
             placeholder="http://localhost:11434",
+            help="The server must allow this URL through LOCAL_RAG_OLLAMA_ENDPOINTS. Documents and prompts are sent to this endpoint.",
             on_change=_refresh_models,
         )
         st.selectbox(
@@ -55,7 +57,7 @@ def settings():
         if st.session_state["advanced"] == True:
             st.select_slider(
                 "Top K",
-                options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                options=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                 help="The number of most similar documents to retrieve in response to a query.",
                 value=st.session_state["top_k"],
                 key="top_k",
@@ -111,37 +113,27 @@ def settings():
             )
             st.caption("Need one? Pull an Ollama embedding model first, e.g. `ollama pull embeddinggemma`.")
         else:
-            embedding_model = st.selectbox(
+            st.selectbox(
                 "Model",
-                [
-                    "Default (gte-modernbert-base)",
-                    "Higher Quality (Qwen3-Embedding-0.6B)",
-                    "Other",
-                ],
+                list(HF_MODELS),
                 key="embedding_model",
             )
-            if embedding_model == "Other":
-                st.text_input(
-                    "HuggingFace Model",
-                    key="other_embedding_model",
-                    placeholder="Qwen/Qwen3-Embedding-0.6B",
-                )
         if st.session_state["advanced"] == True:
             st.caption(
                 "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
             )
             st.text_input(
                 "Chunk Size",
-                help="Reducing `chunk_size` improves embedding precision by focusing on smaller text portions. This enhances information retrieval accuracy but escalates computational demands due to processing more chunks.",
+                max_chars=4,
+                help="256 to 8192 tokens per chunk.",
                 key="chunk_size",
-                placeholder="1024",
                 value=st.session_state["chunk_size"],
             )
             st.text_input(
                 "Chunk Overlap",
-                help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
+                max_chars=4,
+                help="0 to 2048 tokens, at most half of Chunk Size.",
                 key="chunk_overlap",
-                placeholder="200",
                 value=st.session_state["chunk_overlap"],
             )
 
@@ -156,9 +148,17 @@ def settings():
             mime="application/json",
         )
 
-    st.toggle("Advanced Settings", key="advanced")
+    st.toggle("Advanced Settings", key="advanced", value=st.session_state["advanced"])
 
     if st.session_state["advanced"] == True:
-        with st.expander("Current Application State"):
-            state = dict(sorted(st.session_state.items()))
-            st.write(state)
+        with st.expander("Diagnostics"):
+            st.json(sanitized_diagnostics(st.session_state))
+
+
+def sanitized_diagnostics(state):
+    """Expose status only, without document content, prompts, URLs, or paths."""
+    return {
+        "documents_loaded": bool(state.get("documents")),
+        "llm_ready": state.get("llm") is not None,
+        "index_ready": state.get("query_engine") is not None,
+    }

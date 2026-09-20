@@ -2,11 +2,11 @@ import os
 import json
 import ipaddress
 import re
-import shutil
 import socket
 import requests
 import subprocess
 from pathlib import Path
+from zipfile import ZipFile, BadZipFile
 from urllib.parse import urljoin, urlparse
 
 from exiftool import ExifToolHelper
@@ -38,6 +38,58 @@ MAX_UPLOAD_FILES = 10
 MAX_UPLOAD_FILE_BYTES = 25 * 1024 * 1024
 MAX_TOTAL_UPLOAD_BYTES = 100 * 1024 * 1024
 GIT_CLONE_TIMEOUT_SECONDS = 120
+MAX_ARCHIVE_MEMBERS = 2000
+MAX_ARCHIVE_EXPANDED_BYTES = 100 * 1024 * 1024
+MAX_ARCHIVE_MEMBER_BYTES = 25 * 1024 * 1024
+MAX_ARCHIVE_COMPRESSION_RATIO = 100
+
+
+def validate_document_archive(path):
+    """Bound ZIP-based document expansion before handing it to a parser."""
+    try:
+        with ZipFile(path) as archive:
+            members = archive.infolist()
+            if len(members) > MAX_ARCHIVE_MEMBERS:
+                raise ValueError("Document archive has too many entries.")
+            expanded = 0
+            for member in members:
+                expanded += member.file_size
+                if (member.flag_bits & 1 or member.file_size > MAX_ARCHIVE_MEMBER_BYTES
+                        or expanded > MAX_ARCHIVE_EXPANDED_BYTES
+                        or member.file_size > max(member.compress_size, 1) * MAX_ARCHIVE_COMPRESSION_RATIO):
+                    raise ValueError("Document archive exceeds expansion limits or is encrypted.")
+            return expanded
+    except BadZipFile as err:
+        raise ValueError("Invalid document archive.") from err
+
+
+def validated_document_paths(data_dir):
+    """Enumerate only this ingestion's files and preflight archive formats."""
+    root = Path(data_dir)
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError("Invalid ingestion directory.")
+    paths = []
+    total_bytes = 0
+    expanded_bytes = 0
+    for path in root.rglob("*"):
+        if any(part.startswith(".") for part in path.relative_to(root).parts):
+            continue
+        if path.is_symlink():
+            raise ValueError("Symbolic links are not supported in ingested documents.")
+        if not path.is_file():
+            continue
+        size = path.stat().st_size
+        total_bytes += size
+        if size > MAX_UPLOAD_FILE_BYTES or total_bytes > MAX_TOTAL_UPLOAD_BYTES:
+            raise ValueError("Source files exceed ingestion size limits.")
+        paths.append(path)
+        if len(paths) > 1000:
+            raise ValueError("Too many source files. Limit: 1000.")
+        if path.suffix.lower() in {".epub", ".docx", ".pptx", ".xlsx"}:
+            expanded_bytes += validate_document_archive(path)
+            if expanded_bytes > MAX_ARCHIVE_EXPANDED_BYTES:
+                raise ValueError("Document archives exceed the total expansion limit.")
+    return paths
 
 
 def _is_blocked_ip(ip_address: str) -> bool:
@@ -286,7 +338,7 @@ def validate_github_repo(repo: str):
 ###################################
 
 
-def clone_github_repo(repo: str):
+def clone_github_repo(repo: str, save_dir: str):
     """
     Clones a GitHub repository.
 
@@ -306,16 +358,10 @@ def clone_github_repo(repo: str):
         return False
 
     repo_endpoint = f"https://github.com/{repo}.git"
-    save_dir = os.path.join(os.getcwd(), "data")
-    destination = os.path.join(save_dir, repo)
+    destination = os.path.join(save_dir, "repository")
 
     try:
         os.makedirs(save_dir, exist_ok=True)
-
-        # Ensure retries of the same repo don't fail because a stale checkout exists.
-        if os.path.isdir(destination):
-            logs.log.info(f"Removing existing repository directory: {destination}")
-            shutil.rmtree(destination)
 
         result = subprocess.run(
             ["git", "clone", "--depth", "1", "-q", repo_endpoint, destination],

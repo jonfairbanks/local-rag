@@ -20,20 +20,31 @@ To fix this:
 
 Settings are restored from browser `localStorage`. If a stale browser setting points to the wrong Ollama endpoint or a model you no longer have installed, update it in Settings and refresh the model lists. Empty Ollama endpoint values are ignored and the default endpoint is restored.
 
-## Application State
+## Diagnostics
 
-Each stage of the RAG pipeline stores its data in the application state. 
+Open Settings, enable Advanced Settings, and expand Diagnostics. The report shows whether documents, the LLM, and the index are ready. It excludes document content, conversations, endpoints, and paths.
 
-In order for a successful RAG conversation to take place the following state values must NOT be null:
-- `documents` - if null, there was an error processing your documents
-- `llm` - if null, there was an error creating the Ollama LLM instance
-- `query_engine` - if null, errors occurred when creating embeddings for your your documents
+Review anything you share in an issue. Remove credentials, prompts, document content, private URLs, filenames, and paths. Share only the relevant error text, not full application state or raw logs.
 
-To view the current application state:
-- Navigate to the Settings panel
-- Toggle Advanced Settings
-- State is now visible at the bottom of Settings
-- Verify that the above state values are valid
+## Allowed Model Endpoints
+
+By default, the server accepts `http://localhost:11434` and `http://127.0.0.1:11434`. To use a LAN or container-host Ollama server, set `LOCAL_RAG_OLLAMA_ENDPOINTS` to a comma-separated list of exact HTTP or HTTPS origins before starting Local RAG. For example:
+
+```bash
+LOCAL_RAG_OLLAMA_ENDPOINTS=http://192.168.4.2:11434 pipenv run streamlit run main.py
+```
+
+This replaces the default list. Include localhost explicitly if needed. Endpoints cannot contain credentials, paths, queries, or fragments. Redirects and environment proxies are disabled. Allowlisted hostnames and their DNS are trusted operator configuration; use stable IP addresses or egress controls where DNS is outside your control. Documents and prompts are sent to the selected server.
+
+Compose publishes the UI only on `127.0.0.1`. Inside a container, localhost refers to that container. Configure and allow your reachable Ollama server explicitly. Broader UI exposure requires an authenticated reverse proxy and appropriate network controls.
+
+## Ingestion Limits
+
+Uploads and repository clones use private temporary directories, removed even when ingestion stops. The app no longer reads or deletes the legacy shared `data/` directory. Review and remove any old contents manually if upgrading from an earlier release.
+
+Chunk Size accepts 256 through 8192 tokens. Chunk Overlap accepts 0 through 2048 and cannot exceed half of Chunk Size. Indexing stops before embedding more than 10,000 chunks. ZIP-based documents have entry-count, expanded-size, and compression-ratio limits before parsing.
+
+Local Hugging Face embeddings use the two built-in models at pinned revisions with remote code disabled and safetensors required. Arbitrary model repositories are no longer accepted. Use Ollama for other models installed by the operator.
 
 ## Import Errors
 

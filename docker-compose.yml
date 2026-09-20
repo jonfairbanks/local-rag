@@ -15,8 +15,9 @@ services:
       - local-rag-data:/home/appuser/data
     environment:
       - TZ=America/Los_Angeles
+      - LOCAL_RAG_OLLAMA_ENDPOINTS=${LOCAL_RAG_OLLAMA_ENDPOINTS:-http://localhost:11434,http://127.0.0.1:11434}
     ports:
-      - '8501:8501/tcp'
+      - '127.0.0.1:8501:8501/tcp'
     mem_limit: 8g
     cpus: 4
     pids_limit: 512

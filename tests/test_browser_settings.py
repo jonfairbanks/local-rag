@@ -1,4 +1,5 @@
 import unittest
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -16,6 +17,7 @@ from utils.browser_settings import (
 
 
 class BrowserSettingsTests(unittest.TestCase):
+    @patch.dict(os.environ, {"LOCAL_RAG_OLLAMA_ENDPOINTS": "http://192.168.4.2:11434"})
     def test_apply_persisted_settings_coerces_supported_values(self):
         state = {}
         apply_persisted_settings(
@@ -90,6 +92,7 @@ class BrowserSettingsTests(unittest.TestCase):
         self.assertIn('"advanced": true', payload)
         self.assertNotIn("query_params", payload)
 
+    @patch.dict(os.environ, {"LOCAL_RAG_OLLAMA_ENDPOINTS": "http://192.168.4.2:11434"})
     def test_restore_hydrates_ollama_endpoint_and_model_settings_from_browser_storage(self):
         state = {}
         stored_settings = browser_storage_payload(

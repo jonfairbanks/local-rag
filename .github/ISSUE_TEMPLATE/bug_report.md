@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: Bug Report
 about: Create a report to help us improve
 title: ''
 labels: bug
@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Troubleshooting**
-I have read the Local RAG [troubleshooting guide](../../docs/troubleshooting.md), reviewed my application state and log file:
+I have read the Local RAG [troubleshooting guide](../../docs/troubleshooting.md):
 - [ ] Yes
 - [ ] No
 
@@ -26,10 +26,10 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Screenshots**
-If applicable, attach screenshots to help explain your problem. **A screenshot of your Settings > Advanced > Application State section can greatly aid in troubleshooting.**
+If helpful, share Settings > Advanced Settings > Diagnostics. Review screenshots and remove prompts, document content, credentials, private URLs, filenames, and paths before posting.
 
 **Logs**
-If applicable, attach log files to help explain your problem. **Reproducing your issue and sharing a copy of your `local-rag.log` can greatly aid in troubleshooting.**
+Paste only the relevant error text after removing sensitive information. Do not attach raw logs or full application state.
 
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]

@@ -10,6 +10,8 @@ import ollama
 from pydantic import Field
 
 import utils.logs as logs
+from utils.settings_validation import HF_MODEL_REVISIONS, validate_chunk_settings, validate_ollama_endpoint
+from utils.helpers import validated_document_paths
 
 from llama_index.core.embeddings import BaseEmbedding
 
@@ -19,9 +21,11 @@ os.environ["OPENAI_API_KEY"] = "sk-abc123"
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
-    Settings,
 )
 from llama_index.core.ingestion import run_transformations
+from llama_index.core.node_parser import SentenceSplitter
+
+MAX_INDEX_NODES = 10000
 
 
 class ProgressReportingEmbedding(BaseEmbedding):
@@ -65,7 +69,10 @@ class OllamaEmbedding(BaseEmbedding):
     base_url: str = Field(description="Ollama server base URL")
 
     def _client(self):
-        return ollama.Client(host=self.base_url)
+        return ollama.Client(
+            host=validate_ollama_endpoint(self.base_url), timeout=60,
+            follow_redirects=False, trust_env=False,
+        )
 
     def _get_query_embedding(self, query: str):
         return self._client().embed(model=self.model_name, input=query).embeddings[0]
@@ -84,11 +91,8 @@ class OllamaEmbedding(BaseEmbedding):
 ###################################
 
 
-@st.cache_resource(show_spinner=False)
 def setup_embedding_model(
     model: str,
-    chunk_size: Optional[int] = None,
-    chunk_overlap: Optional[int] = None,
     backend: str = "Local Hugging Face",
     ollama_endpoint: Optional[str] = None,
 ):
@@ -111,12 +115,14 @@ def setup_embedding_model(
         if backend == "Ollama":
             if not ollama_endpoint:
                 raise ValueError("Ollama endpoint is required for Ollama embeddings")
-            Settings.embed_model = OllamaEmbedding(
+            embedding = OllamaEmbedding(
                 model_name=model,
-                base_url=ollama_endpoint,
+                base_url=validate_ollama_endpoint(ollama_endpoint),
             )
             logs.log.info(f"Using Ollama model {model} to generate embeddings")
-        else:
+        elif backend == "Local Hugging Face":
+            if model not in HF_MODEL_REVISIONS:
+                raise ValueError("Select a supported Hugging Face embedding model.")
             try:
                 from torch import cuda
                 device = "cpu" if not cuda.is_available() else "cuda"
@@ -125,19 +131,19 @@ def setup_embedding_model(
             from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
             logs.log.info(f"Using {device} to generate embeddings")
-            Settings.embed_model = HuggingFaceEmbedding(
+            embedding = HuggingFaceEmbedding(
                 model_name=model,
                 device=device,
+                revision=HF_MODEL_REVISIONS[model],
+                trust_remote_code=False,
+                model_kwargs={"use_safetensors": True},
             )
-
-        if chunk_size is not None:
-            Settings.chunk_size = chunk_size
-        if chunk_overlap is not None:
-            Settings.chunk_overlap = chunk_overlap
+        else:
+            raise ValueError("Unsupported embedding backend.")
 
         logs.log.info(f"Embedding model created successfully")
 
-        return
+        return embedding
     except Exception as err:
         logs.log.error(f"Failed to setup the embedding model: {err}")
         raise
@@ -167,7 +173,10 @@ def load_documents(data_dir: str):
         The `data_dir` parameter should be a path to a directory containing files that represent the documents to be loaded. The function will iterate over all files in the directory, and load their contents into a list of strings.
     """
     try:
-        files = SimpleDirectoryReader(input_dir=data_dir, recursive=True)
+        paths = validated_document_paths(data_dir)
+        if not paths:
+            return []
+        files = SimpleDirectoryReader(input_files=[str(path) for path in paths])
         documents = files.load_data()
         logs.log.info(f"Loaded {len(documents):,} documents from files")
         return documents
@@ -183,7 +192,7 @@ def load_documents(data_dir: str):
 ###################################
 
 
-def create_index(documents, progress_callback=None):
+def create_index(documents, embed_model, chunk_size, chunk_overlap, progress_callback=None):
     """
     Creates an index from the provided documents and service context.
 
@@ -201,22 +210,23 @@ def create_index(documents, progress_callback=None):
     """
 
     try:
+        chunk_size, chunk_overlap = validate_chunk_settings(chunk_size, chunk_overlap)
         nodes = run_transformations(
             documents,
-            Settings.transformations,
+            [SentenceSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)],
             show_progress=True,
         )
+        if len(nodes) > MAX_INDEX_NODES:
+            raise ValueError(f"Too many document chunks. Limit: {MAX_INDEX_NODES}.")
 
         if progress_callback is not None:
             progress_callback(0, len(nodes))
             embed_model = ProgressReportingEmbedding(
-                wrapped_model=Settings.embed_model,
+                wrapped_model=embed_model,
                 progress_callback=progress_callback,
-                model_name=Settings.embed_model.model_name,
-                embed_batch_size=Settings.embed_model.embed_batch_size,
+                model_name=embed_model.model_name,
+                embed_batch_size=embed_model.embed_batch_size,
             )
-        else:
-            embed_model = Settings.embed_model
 
         index = VectorStoreIndex(
             nodes=nodes,
@@ -239,8 +249,7 @@ def create_index(documents, progress_callback=None):
 ###################################
 
 
-# @st.cache_resource(show_spinner=False)
-def create_query_engine(documents, progress_callback=None):
+def create_query_engine(documents, llm, embed_model, chunk_size, chunk_overlap, progress_callback=None):
     """
     Creates a query engine from the provided documents and service context.
 
@@ -259,9 +268,10 @@ def create_query_engine(documents, progress_callback=None):
         This function uses the `create_index` function to create an index from the provided documents and service context, and then creates a query engine from the resulting index. The `query_engine` parameter is used to specify the parameters of the query engine, including the number of top-ranked items to return (`similarity_top_k`) and the response mode (`response_mode`).
     """
     try:
-        index = create_index(documents, progress_callback=progress_callback)
+        index = create_index(documents, embed_model, chunk_size, chunk_overlap, progress_callback=progress_callback)
 
         query_engine = index.as_query_engine(
+            llm=llm,
             similarity_top_k=st.session_state["top_k"],
             response_mode=st.session_state["chat_mode"],
             streaming=True,

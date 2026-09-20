@@ -4,13 +4,16 @@ import os
 
 import streamlit as st
 import streamlit.components.v1 as components
+from utils.settings_validation import (
+    CHAT_MODES, HF_MODELS, bounded_integer, validate_chunk_settings,
+    validate_ollama_endpoint,
+)
 
 PERSISTED_SETTING_TYPES = {
     "ollama_endpoint": str,
     "embedding_backend": str,
     "ollama_embedding_model": str,
     "embedding_model": str,
-    "other_embedding_model": str,
     "selected_model": str,
     "top_k": int,
     "chat_mode": str,
@@ -64,13 +67,32 @@ def apply_persisted_settings(state, raw_settings):
                 continue
             raw_value = str(raw_value).strip()
         try:
-            if expected_type is bool:
+            if key == "ollama_endpoint":
+                value = validate_ollama_endpoint(raw_value)
+            elif key in {"chunk_size", "chunk_overlap", "top_k"}:
+                bounds = {"chunk_size": (256, 8192), "chunk_overlap": (0, 2048), "top_k": (1, 10)}
+                value = bounded_integer(raw_value, *bounds[key], key)
+            elif expected_type is bool:
                 value = _coerce_bool(raw_value)
             else:
+                if not isinstance(raw_value, str) or len(raw_value) > 256:
+                    continue
                 value = expected_type(raw_value)
+            options = {
+                "embedding_backend": {"Ollama", "Local Hugging Face"},
+                "embedding_model": set(HF_MODELS),
+                "chat_mode": CHAT_MODES,
+            }
+            if key in options and value not in options[key]:
+                continue
         except (TypeError, ValueError):
             continue
         state[key] = value
+
+    try:
+        validate_chunk_settings(state.get("chunk_size", 1024), state.get("chunk_overlap", 200))
+    except ValueError:
+        state["chunk_size"], state["chunk_overlap"] = 1024, 200
 
 
 def serialize_persisted_settings(state):
@@ -86,7 +108,7 @@ def serialize_persisted_settings(state):
 
 def deserialize_persisted_settings(payload):
     """Return persisted settings from a browser localStorage JSON payload."""
-    if not payload:
+    if not isinstance(payload, str) or not payload or len(payload) > 16384:
         return {}
     try:
         settings = json.loads(payload)
