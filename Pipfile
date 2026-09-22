@@ -20,7 +20,7 @@ streamlit-extras = "*"
 black = "*"
 torch = "*"
 torchvision = "*"
-colorama = { version = "*", sys_platform = "== 'win32'" }
+colorama = "*"
 ebooklib = "*"
 llama-index-core = "*"
 fsspec = "*"

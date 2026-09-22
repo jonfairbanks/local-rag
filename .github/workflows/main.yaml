@@ -63,14 +63,22 @@ jobs:
             -f "ref=refs/tags/$new_tag" -f "sha=$GITHUB_SHA"
           echo "new_tag=${new_tag}" >> "$GITHUB_OUTPUT"
 
-  docker:
-    name: Build Docker Image
+  build:
+    name: Build ${{ matrix.arch }} Image
     needs: version
     if: ${{ always() && !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Remove unnecessary files
         run: |
@@ -82,23 +90,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build Docker Tags
-        id: docker-tags
-        env:
-          RELEASE_TAG: ${{ needs.version.outputs.tag }}
-        run: |
-          if [[ "${{ github.event_name }}" = "pull_request" ]]; then
-            TAGS="${{ github.repository }}:pr-${{ github.event.pull_request.number }}"
-          elif [[ "${{ github.ref_name }}" = "develop" ]]; then
-            TAGS="${{ github.repository }}:develop"
-          elif [[ "${{ github.ref_name }}" = "main" || "${{ github.ref_name }}" = "master" ]]; then
-            TAGS="${{ github.repository }}:${RELEASE_TAG},${{ github.repository }}:latest"
-          fi
-          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
-
       - name: Set up Docker Buildx
         id: setup-buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build and Test Image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          target: test
+          cache-from: type=gha,scope=local-rag-${{ matrix.arch }}
 
       - name: Login to DockerHub
         if: github.event_name == 'push'
@@ -107,19 +110,93 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
         
-      - name: Build Docker Image
+      - name: Publish Architecture Image
+        if: github.event_name == 'push'
         id: docker-build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
-          context: ./
-          platforms: linux/amd64
-          file: ./Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.docker-tags.outputs.tags }}
-          cache-from: type=gha
-          # PRs read the cache; branch builds refresh it.
-          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max' || '' }}
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          target: runtime
+          outputs: type=image,name=${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
+          cache-to: type=gha,scope=local-rag-${{ matrix.arch }},mode=max
+
+      - name: Save Image Digest
+        if: github.event_name == 'push'
+        env:
+          DIGEST: ${{ steps.docker-build.outputs.digest }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          mkdir -p "$RUNNER_TEMP/digests"
+          printf '%s\n' "$DIGEST" > "$RUNNER_TEMP/digests/$ARCH.digest"
+
+      - name: Upload Image Digest
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: image-digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*.digest
+          if-no-files-found: error
+          retention-days: 1
+
+  docker:
+    name: Build Docker Image
+    needs: [version, build]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Require Both Architectures
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: test "$BUILD_RESULT" = success
+
+      - name: Download Image Digests
+        if: github.event_name == 'push'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: image-digest-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to DockerHub
+        if: github.event_name == 'push'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Publish Multi-Arch Tags
+        if: github.event_name == 'push'
+        env:
+          IMAGE: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          if [[ "$GITHUB_REF_NAME" == develop ]]; then
+            tag="$IMAGE:develop"
+            tags=(--tag "$tag")
+          else
+            test -n "$RELEASE_TAG"
+            tag="$IMAGE:$RELEASE_TAG"
+            tags=(--tag "$tag" --tag "$IMAGE:latest")
+          fi
+          images=()
+          for arch in amd64 arm64; do
+            read -r digest < "$RUNNER_TEMP/digests/$arch.digest"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            images+=("$IMAGE@$digest")
+          done
+          docker buildx imagetools create "${tags[@]}" "${images[@]}"
+          docker buildx imagetools inspect "$tag" --raw | jq -e \
+            '[.manifests[].platform | select(.os == "linux") | .architecture] | sort == ["amd64", "arm64"]'
 
   notify:
     name: Notify Slack

@@ -35,7 +35,15 @@ ollama list
 docker compose up -d
 ```
 
-Docker Compose runs the published `jonfairbanks/local-rag` image at `http://127.0.0.1:8501`, with a read-only filesystem, tmpfs caches, resource limits, and an NVIDIA GPU reservation. For AMD/ROCm, use `docker compose -f docker-compose.yml-rocm up -d`. Both files accept `LOCAL_RAG_OLLAMA_ENDPOINTS` from the environment or a Compose `.env` file.
+Images support Linux AMD64 and ARM64; Docker selects the matching architecture. Compose serves the app at `http://127.0.0.1:8501`, with a read-only filesystem, tmpfs caches, and resource limits.
+
+The default Compose file reserves an NVIDIA GPU. For CPU-only hosts, including Apple Silicon, use:
+
+```bash
+docker compose -f docker-compose.yml-cpu up -d
+```
+
+For AMD/ROCm, use `docker compose -f docker-compose.yml-rocm up -d`. All Compose files accept `LOCAL_RAG_OLLAMA_ENDPOINTS` from the environment or a Compose `.env` file. ARM64 image checks cover CPU execution; NVIDIA GPU operation requires compatible hardware and drivers.
 
 If Ollama runs on the host, add its address to the Compose `.env` file:
 
