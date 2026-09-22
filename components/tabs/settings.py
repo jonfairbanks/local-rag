@@ -146,14 +146,14 @@ def settings():
             st.text_input(
                 "Chunk Size",
                 max_chars=4,
-                help="256 to 8192 tokens per chunk.",
+                help="Reducing `chunk_size` improves embedding precision by focusing on smaller text portions. This enhances information retrieval accuracy but escalates computational demands due to processing more chunks.",
                 key="chunk_size",
                 value=st.session_state["chunk_size"],
             )
             st.text_input(
                 "Chunk Overlap",
                 max_chars=4,
-                help="0 to 2048 tokens, at most half of Chunk Size.",
+                help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
                 key="chunk_overlap",
                 value=st.session_state["chunk_overlap"],
             )

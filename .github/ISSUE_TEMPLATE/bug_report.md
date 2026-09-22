@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Troubleshooting**
-I have read the Local RAG [troubleshooting guide](../../docs/troubleshooting.md):
+I have read the Local RAG [troubleshooting guide](../../docs/troubleshooting.md), reviewed my application state and log file:
 - [ ] Yes
 - [ ] No
 

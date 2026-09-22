@@ -18,7 +18,7 @@ Local RAG builds an in-memory LlamaIndex query engine from one source at a time:
 6. Split documents into chunks using the configured chunk size and chunk overlap.
 7. Generate embeddings and display exact progress while indexing.
 8. Create a streaming LlamaIndex query engine with the configured `top_k` and response mode.
-9. Remove this operation's private temporary files, then replace the session's index, documents and LLM together. Failure preserves the previous working state.
+9. Remove transient on-disk ingestion files from the operation's private temporary directory.
 
 ## Source-Specific Stages
 
@@ -33,8 +33,8 @@ The UI stores completed ingestion stages in Streamlit session state so reruns ca
 Users can adjust these advanced settings:
 
 1. **`top_k`**: Number of similar chunks retrieved for each query. Higher values provide more context but may add noise.
-2. **`chunk_size`**: 256 through 8192 tokens per chunk. Smaller chunks can improve precision but increase embedding work. Indexing stops before embedding more than 10,000 chunks.
-3. **`chunk_overlap`**: 0 through 2048 tokens, at most half of `chunk_size`.
+2. **`chunk_size`**: Maximum size of each text chunk before embedding. Smaller chunks can improve precision but increase embedding work.
+3. **`chunk_overlap`**: Overlap between consecutive chunks. This must be greater than or equal to `0` and less than `chunk_size`.
 4. **`chat_mode`**: LlamaIndex response mode. The current UI exposes this setting as disabled and defaults to `compact`.
 
 ## Runtime State
