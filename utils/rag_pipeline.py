@@ -80,10 +80,9 @@ def render_completed_ingestion_status(status_container, completed_stages):
 def rag_pipeline(
     uploaded_files=None, documents=None, data_dir=None, **kwargs
 ):
-    """Keep ingestion state and temporary uploads private to this operation."""
-    st.session_state["query_engine"] = None
-    st.session_state["documents"] = None
-    st.session_state["llm"] = None
+    """Commit a replacement index only after ingestion and cleanup succeed."""
+    status_key = kwargs.get("status_state_key", "file_ingestion_stages")
+    previous_stages = st.session_state.get(status_key, [])
     completed = False
     try:
         if uploaded_files is not None:
@@ -96,13 +95,14 @@ def rag_pipeline(
             if documents is None and data_dir is None:
                 raise ValueError("An ingestion source is required.")
             result = _rag_pipeline(documents=documents, data_dir=data_dir, **kwargs)
+        st.session_state.update(result)
         completed = True
-        return result
+        return None
+    except Exception as err:
+        return err
     finally:
         if not completed:
-            st.session_state["query_engine"] = None
-            st.session_state["documents"] = None
-            st.session_state["llm"] = None
+            st.session_state[status_key] = previous_stages
 
 
 def _rag_pipeline(
@@ -138,7 +138,6 @@ def _rag_pipeline(
         - Loads documents from the supplied source.
         - The caller owns cleanup of temporary upload or clone directories.
     """
-    error = None
     completed_stages = list(initial_stages or [])
 
     def record_completed_stages():
@@ -159,7 +158,6 @@ def _rag_pipeline(
             st.session_state["ollama_endpoint"],
             st.session_state["system_prompt"],
         )
-        st.session_state["llm"] = llm
         completed_stages.append("LLM Initialized")
         record_completed_stages()
         render_pipeline_status(status_container, completed_stages)
@@ -168,9 +166,7 @@ def _rag_pipeline(
         # print(resp)
     except Exception as err:
         logs.log.error(f"Failed to setup LLM: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     ####################################
     # Determine embedding model to use #
@@ -183,6 +179,8 @@ def _rag_pipeline(
         selected_embedding_model = st.session_state["ollama_embedding_model"]
     elif embedding_model in HF_MODELS:
         selected_embedding_model = HF_MODELS[embedding_model]
+    elif embedding_model == "Other":
+        selected_embedding_model = st.session_state.get("other_embedding_model")
     else:
         raise ValueError(f"Unsupported embedding model selection: {embedding_model}")
 
@@ -200,19 +198,14 @@ def _rag_pipeline(
         render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Setting up Embedding Model failed: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     try:
-        # Always reset the query engine before ingesting fresh source content.
-        st.session_state["query_engine"] = None
-
         if documents is not None:
             if len(documents) == 0:
                 raise ValueError("No documents were loaded from the selected source.")
             validate_ingested_documents(documents)
-            st.session_state["documents"] = documents
+            ingested_documents = documents
             completed_stages.append(documents_loaded_stage)
             record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
@@ -229,15 +222,12 @@ def _rag_pipeline(
             if len(ingested_documents) == 0:
                 raise ValueError("No files were found to process.")
             validate_ingested_documents(ingested_documents)
-            st.session_state["documents"] = ingested_documents
             completed_stages.append(documents_loaded_stage)
             record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Document Load Error: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     ###########################################
     # Create an index from ingested documents #
@@ -258,8 +248,8 @@ def _rag_pipeline(
         render_pipeline_status(
             status_container, completed_stages, "Generating Embeddings"
         )
-        llama_index.create_query_engine(
-            st.session_state["documents"],
+        query_engine = llama_index.create_query_engine(
+            ingested_documents,
             llm=llm,
             embed_model=embed_model,
             chunk_size=chunk_size,
@@ -272,8 +262,6 @@ def _rag_pipeline(
         render_completed_ingestion_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
-    return error  # If no errors occurred, None is returned
+    return {"query_engine": query_engine, "documents": ingested_documents, "llm": llm}

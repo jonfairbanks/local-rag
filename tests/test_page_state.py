@@ -26,7 +26,7 @@ class PageStateTests(unittest.TestCase):
 
         self.assertEqual(state["selected_model"], "gemma4:latest")
 
-    def test_ensure_valid_model_selections_clears_missing_ollama_embedding_model(self):
+    def test_ensure_valid_model_selections_preserves_preferences_when_discovery_is_empty(self):
         state = {
             "selected_model": "gemma4:latest",
             "ollama_models": ["gemma4:latest"],
@@ -37,7 +37,10 @@ class PageStateTests(unittest.TestCase):
 
         ensure_valid_model_selections(state)
 
-        self.assertIsNone(state["ollama_embedding_model"])
+        self.assertEqual(state["ollama_embedding_model"], "embeddinggemma")
+        state["ollama_models"] = []
+        ensure_valid_model_selections(state)
+        self.assertEqual(state["selected_model"], "gemma4:latest")
 
     def test_ensure_valid_model_selections_prefers_embeddinggemma_latest(self):
         state = {

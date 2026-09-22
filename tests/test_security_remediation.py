@@ -93,7 +93,13 @@ class SettingsBoundaryTests(unittest.TestCase):
                 "ollama_endpoint": "http://example.invalid:11434",
             },
         )
-        self.assertEqual(restored, {"chunk_size": 1024, "chunk_overlap": 200})
+        self.assertEqual(restored, {
+            "chunk_size": 1024, "chunk_overlap": 200,
+            "embedding_model": "Other", "ollama_endpoint": "http://example.invalid:11434",
+        })
+        with patch.object(ollama.ollama, "Client") as client:
+            self.assertFalse(ollama.create_client(restored["ollama_endpoint"]))
+            client.assert_not_called()
 
     def test_diagnostics_exclude_sensitive_values(self):
         diagnostic = settings.sanitized_diagnostics(
@@ -149,6 +155,11 @@ class ArchiveBoundaryTests(unittest.TestCase):
 
 
 class ModelIsolationTests(unittest.TestCase):
+    def setUp(self):
+        session_patch = patch.object(llama_index.st, "session_state", state())
+        session_patch.start()
+        self.addCleanup(session_patch.stop)
+
     def test_real_hugging_face_constructor_preserves_safe_loader_options(self):
         from llama_index.embeddings.huggingface import base
         from sentence_transformers import SentenceTransformer
@@ -203,9 +214,32 @@ class ModelIsolationTests(unittest.TestCase):
             constructor.call_args_list[1].kwargs["system_prompt"], "Second prompt"
         )
 
-    def test_unknown_hugging_face_model_is_rejected_before_loading(self):
-        with self.assertRaisesRegex(ValueError, "supported Hugging Face"):
-            llama_index.setup_embedding_model("example/not-reviewed")
+    def test_invalid_hugging_face_model_is_rejected_before_loading(self):
+        from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+        with patch("llama_index.embeddings.huggingface.HuggingFaceEmbedding", spec=HuggingFaceEmbedding) as loader:
+            for model in ["../weights", "https://huggingface.co/org/model", "org/model/subdir", "utils"]:
+                with self.subTest(model=model), self.assertRaises(ValueError):
+                    llama_index.setup_embedding_model(model)
+            loader.assert_not_called()
+
+    def test_custom_model_reuse_is_scoped_to_session_and_configuration(self):
+        first_state, second_state = {}, {}
+        with patch("llama_index.embeddings.huggingface.HuggingFaceEmbedding", side_effect=lambda **kwargs: Mock()) as loader, patch("torch.cuda.is_available", return_value=False):
+            with patch.object(llama_index.st, "session_state", first_state):
+                first = llama_index.setup_embedding_model("sentence-transformers/all-MiniLM-L6-v2")
+                self.assertIs(first, llama_index.setup_embedding_model("sentence-transformers/all-MiniLM-L6-v2"))
+                loader.assert_called_once()
+                self.assertEqual(loader.call_args.kwargs["revision"], "main")
+                self.assertFalse(loader.call_args.kwargs["trust_remote_code"])
+                self.assertEqual(loader.call_args.kwargs["model_kwargs"], {"use_safetensors": True})
+                with patch("torch.cuda.is_available", return_value=True):
+                    self.assertIsNot(first, llama_index.setup_embedding_model("sentence-transformers/all-MiniLM-L6-v2"))
+                llama_index.setup_embedding_model("Alibaba-NLP/gte-modernbert-base")
+                with patch.dict(HF_MODEL_REVISIONS, {"Alibaba-NLP/gte-modernbert-base": "different-revision"}):
+                    llama_index.setup_embedding_model("Alibaba-NLP/gte-modernbert-base")
+            with patch.object(llama_index.st, "session_state", second_state):
+                self.assertIsNot(first, llama_index.setup_embedding_model("sentence-transformers/all-MiniLM-L6-v2"))
+            self.assertEqual(loader.call_count, 5)
 
     def test_builtin_model_uses_safe_pinned_loader_options(self):
         loader = Mock()
@@ -246,6 +280,8 @@ class IngestionOwnershipTests(unittest.TestCase):
         upload = SimpleNamespace(name="notes.txt", size=5, getbuffer=lambda: b"hello")
         for stage in [None, "llm", "embedding", "load", "index"]:
             session = state()
+            previous = {"llm": object(), "query_engine": object(), "documents": [Document(text="Previous source")], "file_ingestion_stages": ["Index Ready"]}
+            session.update(previous)
             streamlit = SimpleNamespace(
                 session_state=session,
                 spinner=lambda *args: nullcontext(),
@@ -285,12 +321,55 @@ class IngestionOwnershipTests(unittest.TestCase):
                     self.assertIsNone(rag_pipeline.rag_pipeline([upload]))
                     self.assertEqual(session["documents"][0].text, "hello")
                 else:
-                    with self.assertRaises(StopSignal):
-                        rag_pipeline.rag_pipeline([upload])
-                    self.assertIsNone(session["documents"])
-                    self.assertIsNone(session["query_engine"])
+                    self.assertIsInstance(rag_pipeline.rag_pipeline([upload]), ValueError)
+                    for key, value in previous.items():
+                        self.assertIs(session[key], value)
             self.assertFalse(paths[-1].exists())
         self.assertEqual(len(paths), len(set(paths)))
+
+    def test_control_flow_stop_keeps_previous_index_and_cleans_uploads(self):
+        session = state()
+        previous = {"llm": object(), "query_engine": object(), "documents": [Document(text="Previous source")]}
+        session.update(previous)
+        staged = []
+
+        def stopped(**kwargs):
+            staged.append(Path(kwargs["data_dir"]))
+            raise StopSignal()
+
+        upload = SimpleNamespace(name="notes.txt", size=5, getbuffer=lambda: b"hello")
+        with patch.object(rag_pipeline.st, "session_state", session), patch.object(rag_pipeline, "_rag_pipeline", side_effect=stopped):
+            with self.assertRaises(StopSignal):
+                rag_pipeline.rag_pipeline([upload])
+        for key, value in previous.items():
+            self.assertIs(session[key], value)
+        self.assertFalse(staged[0].exists())
+
+    def test_real_index_with_progress_commits_after_cleanup_and_survives_bad_settings(self):
+        session = state()
+        session["embedding_backend"] = "Local Hugging Face"
+        session["embedding_model"] = "Other"
+        session["other_embedding_model"] = "sentence-transformers/all-MiniLM-L6-v2"
+        upload = SimpleNamespace(name="notes.txt", size=5, getbuffer=lambda: b"hello")
+        paths = []
+        loader = llama_index.load_documents
+
+        def load(directory):
+            paths.append(Path(directory))
+            self.assertIsNone(session.get("query_engine"))
+            return loader(directory)
+
+        with patch.object(rag_pipeline.st, "session_state", session), patch.object(ollama, "create_ollama_llm", return_value=MockLLM()), patch.object(llama_index, "setup_embedding_model", return_value=MockEmbedding(embed_dim=4)) as embedding, patch.object(llama_index, "load_documents", side_effect=load):
+            self.assertIsNone(rag_pipeline.rag_pipeline([upload]))
+            self.assertEqual(embedding.call_args.args[0], session["other_embedding_model"])
+            self.assertFalse(paths[0].exists())
+            engine = session["query_engine"]
+            self.assertTrue(str(engine.query("What does the document say?")))
+            session["chunk_size"] = 1
+            self.assertIsInstance(rag_pipeline.rag_pipeline(documents=[Document(text="Replacement")]), ValueError)
+            self.assertIs(session["query_engine"], engine)
+            self.assertEqual(session["documents"][0].text, "hello")
+            self.assertTrue(str(engine.query("Can I still query the previous document?")))
 
     def test_github_partial_clone_cleanup_on_stop(self):
         staged = []

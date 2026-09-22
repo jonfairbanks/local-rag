@@ -20,6 +20,8 @@ To fix this:
 
 Settings are restored from browser `localStorage`. If a stale browser setting points to the wrong Ollama endpoint or a model you no longer have installed, update it in Settings and refresh the model lists. Empty Ollama endpoint values are ignored and the default endpoint is restored.
 
+A saved endpoint outside the server allowlist remains in Settings with an error explaining `LOCAL_RAG_OLLAMA_ENDPOINTS`; it is not contacted. Allow the origin on the server or select an allowed endpoint.
+
 ## Diagnostics
 
 Open Settings, enable Advanced Settings, and expand Diagnostics. The report shows whether documents, the LLM, and the index are ready. It excludes document content, conversations, endpoints, and paths.
@@ -44,7 +46,9 @@ Uploads and repository clones use private temporary directories, removed even wh
 
 Chunk Size accepts 256 through 8192 tokens. Chunk Overlap accepts 0 through 2048 and cannot exceed half of Chunk Size. Indexing stops before embedding more than 10,000 chunks. ZIP-based documents have entry-count, expanded-size, and compression-ratio limits before parsing.
 
-Local Hugging Face embeddings use the two built-in models at pinned revisions with remote code disabled and safetensors required. Arbitrary model repositories are no longer accepted. Use Ollama for other models installed by the operator.
+Local Hugging Face embeddings offer two built-in models at pinned revisions and **Other** for a custom Hub model ID. Custom models use `main`; choose repositories you trust. Remote Python code is disabled and safetensors weights are required for every model. A model that requires custom Python code or only provides pickle weights will fail to load. The existing index remains available after a failed replacement.
+
+Failed file imports do not retry on every rerun. Correct the model or chunk settings and select **Retry Import**, or upload changed files. A successful replacement updates the index; until then, chat continues to use the previous source and model settings.
 
 ## Import Errors
 

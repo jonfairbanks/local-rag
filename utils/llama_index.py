@@ -10,7 +10,7 @@ import ollama
 from pydantic import Field
 
 import utils.logs as logs
-from utils.settings_validation import HF_MODEL_REVISIONS, validate_chunk_settings, validate_ollama_endpoint
+from utils.settings_validation import HF_MODEL_REVISIONS, validate_chunk_settings, validate_ollama_endpoint, validate_huggingface_model
 from utils.helpers import validated_document_paths
 
 from llama_index.core.embeddings import BaseEmbedding
@@ -121,23 +121,29 @@ def setup_embedding_model(
             )
             logs.log.info(f"Using Ollama model {model} to generate embeddings")
         elif backend == "Local Hugging Face":
-            if model not in HF_MODEL_REVISIONS:
-                raise ValueError("Select a supported Hugging Face embedding model.")
+            model = validate_huggingface_model(model)
+            revision = HF_MODEL_REVISIONS.get(model, "main")
             try:
                 from torch import cuda
                 device = "cpu" if not cuda.is_available() else "cuda"
             except Exception:
                 device = "cpu"
+            cache_key = (model, revision, device)
+            cached = st.session_state.get("hf_embedding_cache")
+            if cached is not None and cached[0] == cache_key:
+                return cached[1]
             from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
             logs.log.info(f"Using {device} to generate embeddings")
             embedding = HuggingFaceEmbedding(
                 model_name=model,
                 device=device,
-                revision=HF_MODEL_REVISIONS[model],
+                revision=revision,
                 trust_remote_code=False,
                 model_kwargs={"use_safetensors": True},
             )
+            # Keep only one reusable model per session, never a global resource.
+            st.session_state["hf_embedding_cache"] = (cache_key, embedding)
         else:
             raise ValueError("Unsupported embedding backend.")
 
@@ -276,8 +282,6 @@ def create_query_engine(documents, llm, embed_model, chunk_size, chunk_overlap, 
             response_mode=st.session_state["chat_mode"],
             streaming=True,
         )
-
-        st.session_state["query_engine"] = query_engine
 
         logs.log.info("Query Engine created successfully")
 

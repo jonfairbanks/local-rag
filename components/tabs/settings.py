@@ -5,7 +5,7 @@ import streamlit as st
 import utils.ollama as ollama
 from components.page_state import default_chat_model
 from utils.browser_settings import ensure_ollama_endpoint
-from utils.settings_validation import HF_MODELS
+from utils.settings_validation import HF_MODELS, validate_ollama_endpoint, validate_huggingface_model
 
 from datetime import datetime
 
@@ -14,7 +14,7 @@ def _refresh_models():
     ensure_ollama_endpoint(st.session_state)
     ollama.get_models()
     ollama.get_embedding_models()
-    if st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
+    if st.session_state["ollama_models"] and st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
         st.session_state["selected_model"] = default_chat_model(
             st.session_state["ollama_models"]
         )
@@ -42,10 +42,14 @@ def settings():
             help="The server must allow this URL through LOCAL_RAG_OLLAMA_ENDPOINTS. Documents and prompts are sent to this endpoint.",
             on_change=_refresh_models,
         )
+        try:
+            validate_ollama_endpoint(st.session_state["ollama_endpoint"])
+        except ValueError as err:
+            st.error(str(err))
         st.selectbox(
             "Chat Model",
             st.session_state["ollama_models"],
-            key="selected_model",
+            key="selected_model" if st.session_state["ollama_models"] else "unavailable_chat_model",
             disabled= len(st.session_state["ollama_models"])==0,
             placeholder= "Select Chat Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
@@ -98,7 +102,7 @@ def settings():
             st.selectbox(
                 "Embedding Model",
                 st.session_state["ollama_embedding_models"],
-                key="ollama_embedding_model",
+                key="ollama_embedding_model" if st.session_state["ollama_embedding_models"] else "unavailable_embedding_model",
                 disabled=len(st.session_state["ollama_embedding_models"]) == 0,
                 placeholder=(
                     "Select Model"
@@ -115,13 +119,30 @@ def settings():
         else:
             st.selectbox(
                 "Model",
-                list(HF_MODELS),
+                list(HF_MODELS) + ["Other"],
                 key="embedding_model",
             )
+            if st.session_state["embedding_model"] == "Other":
+                model = st.text_input(
+                    "Hugging Face Model ID",
+                    key="other_embedding_model",
+                    max_chars=256,
+                    placeholder="sentence-transformers/all-MiniLM-L6-v2",
+                    help="Choose a trusted embedding model with safetensors weights. Remote Python code is disabled.",
+                )
+                if model:
+                    try:
+                        validate_huggingface_model(model)
+                    except ValueError as err:
+                        st.error(str(err))
         if st.session_state["advanced"] == True:
             st.caption(
                 "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
             )
+            # Restored integers must become strings before keyed text widgets
+            # receive them, including after a browser reload.
+            st.session_state["chunk_size"] = str(st.session_state["chunk_size"])
+            st.session_state["chunk_overlap"] = str(st.session_state["chunk_overlap"])
             st.text_input(
                 "Chunk Size",
                 max_chars=4,

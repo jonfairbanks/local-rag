@@ -93,7 +93,7 @@ jobs:
           elif [[ "${{ github.ref_name }}" = "main" || "${{ github.ref_name }}" = "master" ]]; then
             TAGS="${{ github.repository }}:${RELEASE_TAG},${{ github.repository }}:latest"
           fi
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         id: setup-qemu

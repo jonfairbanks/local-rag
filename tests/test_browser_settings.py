@@ -17,6 +17,18 @@ from utils.browser_settings import (
 
 
 class BrowserSettingsTests(unittest.TestCase):
+    def test_custom_model_and_blocked_endpoint_survive_browser_round_trip(self):
+        saved = {"ollama_endpoint": "http://host.docker.internal:11434", "embedding_backend": "Local Hugging Face", "embedding_model": "Other", "other_embedding_model": "sentence-transformers/all-MiniLM-L6-v2"}
+        restored = {}
+        apply_persisted_settings(restored, deserialize_persisted_settings(browser_storage_payload(saved)))
+        self.assertEqual(serialize_persisted_settings(restored), saved)
+
+    def test_custom_model_paths_are_not_restored(self):
+        for model in ["../weights", "/tmp/model", "https://huggingface.co/org/model"]:
+            restored = {}
+            apply_persisted_settings(restored, {"other_embedding_model": model})
+            self.assertNotIn("other_embedding_model", restored)
+
     @patch.dict(os.environ, {"LOCAL_RAG_OLLAMA_ENDPOINTS": "http://192.168.4.2:11434"})
     def test_apply_persisted_settings_coerces_supported_values(self):
         state = {}

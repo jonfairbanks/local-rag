@@ -1,4 +1,5 @@
 import streamlit as st
+from utils.settings_validation import validate_huggingface_model
 
 
 def missing_ingestion_settings():
@@ -15,6 +16,11 @@ def missing_ingestion_settings():
         embedding_models = st.session_state.get("ollama_embedding_models", [])
         if not embedding_model or embedding_model not in embedding_models:
             missing.append("a valid Ollama embedding model")
+    elif st.session_state.get("embedding_model") == "Other":
+        try:
+            validate_huggingface_model(st.session_state.get("other_embedding_model"))
+        except ValueError:
+            missing.append("a valid Hugging Face model ID")
 
     return missing
 
@@ -31,7 +37,6 @@ def render_ingestion_settings_warning():
         return
 
     st.warning(
-        "Before importing data, go to **Settings** and configure a valid Ollama "
-        "chat model and a valid Ollama embedding model.",
+        "Before importing data, go to **Settings** and configure " + " and ".join(missing) + ".",
         icon="⚠️",
     )
