@@ -45,7 +45,7 @@ MAX_ARCHIVE_COMPRESSION_RATIO = 100
 
 
 def validate_document_archive(path):
-    """Bound ZIP-based document expansion before handing it to a parser."""
+    """Check archive expansion limits before parsing a document."""
     try:
         with ZipFile(path) as archive:
             members = archive.infolist()
@@ -64,7 +64,7 @@ def validate_document_archive(path):
 
 
 def validated_document_paths(data_dir):
-    """Enumerate only this ingestion's files and preflight archive formats."""
+    """Check source files and archives before loading them."""
     root = Path(data_dir)
     if root.is_symlink() or not root.is_dir():
         raise ValueError("Invalid ingestion directory.")

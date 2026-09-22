@@ -18,7 +18,7 @@ Settings are stored in browser `localStorage` and restored on the next visit fro
 
 | Setting | Description | Default |
 | --- | --- | --- |
-| Ollama Endpoint | API origin allowed by the server's `LOCAL_RAG_OLLAMA_ENDPOINTS`. Saved origins remain visible if blocked; Settings explains how to allow them. Empty values fall back to localhost. | `http://localhost:11434` |
+| Ollama Endpoint | Ollama URL allowed by `LOCAL_RAG_OLLAMA_ENDPOINTS`. Blocked URLs remain editable; an empty value restores the default. | `http://localhost:11434` |
 | Chat Model | Installed Ollama model with `completion` capability. | Prefers `gemma4:latest`, then `llama3:8b`, then `llama2:7b`, then the first discovered chat model. |
 | Refresh Models | Reloads chat and embedding model lists for the current endpoint. | |
 | Top K | Number of most similar chunks to retrieve for each query. Advanced setting. | `3` |
@@ -35,9 +35,9 @@ Settings are stored in browser `localStorage` and restored on the next visit fro
 | Chunk Size | 256 to 8192 tokens per chunk. Advanced setting. | `1024` |
 | Chunk Overlap | 0 to 2048 tokens, at most half of Chunk Size. Advanced setting. | `200` |
 
-The two built-in Hugging Face models use pinned revisions. Custom models use their `main` revision. All models require safetensors weights and load with remote Python code disabled; models requiring custom code are unsupported. Choose custom repositories you trust. Downloads need network access on first use; offline use requires the selected revision and tokenizer files to be cached. Each browser session reuses its most recently loaded embedding model, without sharing model objects across sessions.
+Built-in Hugging Face models use pinned revisions; custom models use `main`. Choose repositories you trust. Models must provide safetensors weights and work without remote Python code. Download the model and tokenizer before going offline. Each browser session caches its latest embedding model.
 
-Model and chunk changes apply to the next successful import. A failed replacement keeps the previous index available. Failed file uploads wait for **Retry Import** or changed file contents instead of retrying on every page interaction.
+Model and chunk changes apply to the next successful import. If an import fails, chat keeps using the previous index. Correct the settings or files, then select **Retry Import**.
 
 ## Data Sources
 
@@ -51,7 +51,7 @@ Upload limits:
 - 25 MB per file
 - 100 MB total per upload
 
-Uploaded files are staged in a private temporary directory and removed after ingestion, including failures. Re-uploading the same files reuses the existing index; changed file contents trigger reprocessing. ZIP-based documents also have archive expansion limits, and indexing is limited to 10,000 chunks.
+Uploads use a private temporary directory, cleaned up after each import. Unchanged files reuse the existing index. Archive expansion is limited, and an index can contain up to 10,000 chunks.
 
 ### GitHub Repositories
 
@@ -60,9 +60,9 @@ The GitHub source accepts either:
 - `owner/repo`
 - `https://github.com/owner/repo`
 
-Only `github.com` repository URLs are supported. URLs must point directly to a repository; issue, pull request, branch, or other extra path URLs are rejected. Repositories are cloned with `--depth 1` into a private temporary directory and removed after ingestion, including failures. Sources are limited to 1,000 files, 25 MB per file and 100 MB total; symbolic links are rejected. Hidden paths, including `.git`, are excluded from document loading.
+Use the repository URL on `github.com`, without a branch, issue, or pull request path. Repositories are cloned with `--depth 1` into a private temporary directory, then removed after ingestion. Imports allow up to 1,000 files, 25 MB per file and 100 MB total. Symbolic links are rejected; hidden paths such as `.git` are skipped.
 
-Compose provides a shared 512 MB `/tmp` for staging. Clone metadata and simultaneous imports also use that space. If legitimate imports exhaust it, increase the service's `/tmp` tmpfs size within the container memory budget.
+Compose gives `/tmp` 512 MB, shared by imports and clone metadata. Increase its tmpfs size if needed, within the container's memory limit.
 
 ### Websites
 

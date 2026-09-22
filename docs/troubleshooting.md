@@ -20,35 +20,35 @@ To fix this:
 
 Settings are restored from browser `localStorage`. If a stale browser setting points to the wrong Ollama endpoint or a model you no longer have installed, update it in Settings and refresh the model lists. Empty Ollama endpoint values are ignored and the default endpoint is restored.
 
-A saved endpoint outside the server allowlist remains in Settings with an error explaining `LOCAL_RAG_OLLAMA_ENDPOINTS`; it is not contacted. Allow the origin on the server or select an allowed endpoint.
+Blocked endpoints stay visible in Settings. Add the address to `LOCAL_RAG_OLLAMA_ENDPOINTS` on the server or choose an allowed endpoint.
 
 ## Diagnostics
 
-Open Settings, enable Advanced Settings, and expand Diagnostics. The report shows whether documents, the LLM, and the index are ready. It excludes document content, conversations, endpoints, and paths.
+Open Settings, enable Advanced Settings, and expand Diagnostics to check whether documents, the LLM, and the index are ready. No document content or chat history is shown.
 
-Review anything you share in an issue. Remove credentials, prompts, document content, private URLs, filenames, and paths. Share only the relevant error text, not full application state or raw logs.
+Remove private data before sharing screenshots or logs in an issue.
 
 ## Allowed Model Endpoints
 
-By default, the server accepts `http://localhost:11434` and `http://127.0.0.1:11434`. To use a LAN or container-host Ollama server, set `LOCAL_RAG_OLLAMA_ENDPOINTS` to a comma-separated list of exact HTTP or HTTPS origins before starting Local RAG. For example:
+Local RAG allows `http://localhost:11434` and `http://127.0.0.1:11434` by default. To use another Ollama server, set a comma-separated list of HTTP or HTTPS addresses before starting the app:
 
 ```bash
 LOCAL_RAG_OLLAMA_ENDPOINTS=http://192.168.4.2:11434 pipenv run streamlit run main.py
 ```
 
-This replaces the default list. Include localhost explicitly if needed. Endpoints cannot contain credentials, paths, queries, or fragments. Redirects and environment proxies are disabled. Allowlisted hostnames and their DNS are trusted operator configuration; use stable IP addresses or egress controls where DNS is outside your control. Documents and prompts are sent to the selected server.
+This replaces the defaults, so include localhost if needed. Use a scheme, host, and optional port, without credentials or a path, query, or fragment. Redirects and environment proxies are disabled. Use hosts and DNS you trust, since the selected server receives your documents and prompts.
 
-Compose publishes the UI only on `127.0.0.1`. Inside a container, localhost refers to that container. Configure and allow your reachable Ollama server explicitly. Broader UI exposure requires an authenticated reverse proxy and appropriate network controls.
+For Docker host routing and remote UI access, see [Setup](setup.md#docker).
 
 ## Ingestion Limits
 
-Uploads and repository clones use private temporary directories, removed even when ingestion stops. The app no longer reads or deletes the legacy shared `data/` directory. Review and remove any old contents manually if upgrading from an earlier release.
+Uploads and clones use private temporary directories that are cleaned up after ingestion. The old shared `data/` directory is no longer used; review and remove its contents yourself when upgrading.
 
-Chunk Size accepts 256 through 8192 tokens. Chunk Overlap accepts 0 through 2048 and cannot exceed half of Chunk Size. Indexing stops before embedding more than 10,000 chunks. ZIP-based documents have entry-count, expanded-size, and compression-ratio limits before parsing.
+Chunk Size accepts 256 to 8192 tokens. Chunk Overlap accepts 0 to 2048, up to half of Chunk Size. Indexing stops at 10,000 chunks. ZIP-based documents are checked for excessive entries, expanded size, and compression ratios before parsing.
 
-Local Hugging Face embeddings offer two built-in models at pinned revisions and **Other** for a custom Hub model ID. Custom models use `main`; choose repositories you trust. Remote Python code is disabled and safetensors weights are required for every model. A model that requires custom Python code or only provides pickle weights will fail to load. The existing index remains available after a failed replacement.
+Hugging Face models must provide safetensors weights and work without remote Python code. Use **Other** for a custom model ID from a repository you trust. Built-in models use pinned revisions; custom models use `main`.
 
-Failed file imports do not retry on every rerun. Correct the model or chunk settings and select **Retry Import**, or upload changed files. A successful replacement updates the index; until then, chat continues to use the previous source and model settings.
+If an import fails, correct the settings and select **Retry Import**, or change the files. Chat keeps using the previous source and model until an import succeeds.
 
 ## Import Errors
 

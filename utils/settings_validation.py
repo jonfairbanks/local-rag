@@ -27,7 +27,7 @@ CHAT_MODES = {
 
 
 def validate_huggingface_model(value):
-    """Validate Hub model-ID syntax without probing user-supplied paths."""
+    """Validate Hugging Face model IDs without accessing the filesystem."""
     if not isinstance(value, str) or not value.strip() or len(value) > 256 or not value.isascii():
         raise ValueError("Enter a Hugging Face model ID, such as sentence-transformers/all-MiniLM-L6-v2.")
     model = value.strip()
@@ -39,7 +39,7 @@ def validate_huggingface_model(value):
 
 
 def bounded_integer(value, minimum, maximum, label):
-    # Check representation size before converting browser-controlled integers.
+    # Limit input length before integer conversion.
     if isinstance(value, bool) or not isinstance(value, (int, str)):
         raise ValueError(f"{label} must be an integer.")
     if isinstance(value, str) and (

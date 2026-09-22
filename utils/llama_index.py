@@ -142,7 +142,7 @@ def setup_embedding_model(
                 trust_remote_code=False,
                 model_kwargs={"use_safetensors": True},
             )
-            # Keep only one reusable model per session, never a global resource.
+            # Cache one model per session to limit memory use.
             st.session_state["hf_embedding_cache"] = (cache_key, embedding)
         else:
             raise ValueError("Unsupported embedding backend.")

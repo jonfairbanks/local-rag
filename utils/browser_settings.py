@@ -69,8 +69,7 @@ def apply_persisted_settings(state, raw_settings):
             raw_value = str(raw_value).strip()
         try:
             if key == "ollama_endpoint":
-                # Preserve the user's endpoint for correction. Network clients
-                # independently enforce the server allowlist before connecting.
+                # Keep blocked endpoints editable; clients check the allowlist.
                 value = canonical_ollama_endpoint(raw_value)
             elif key == "other_embedding_model":
                 value = validate_huggingface_model(raw_value)
@@ -149,9 +148,7 @@ def should_refresh_models_for_endpoint(state, models_key):
 def restore_settings_from_browser_storage():
     """Hydrate session state from browser localStorage once per session."""
     if st.session_state.get("browser_settings_restored"):
-        # Detach saved values from widgets that may disappear when a backend
-        # changes or model discovery is unavailable. Streamlit otherwise removes
-        # their state at the end of the render.
+        # Keep settings when Streamlit removes hidden widgets and their state.
         for key in PERSISTED_SETTING_TYPES:
             if key in st.session_state:
                 st.session_state[key] = st.session_state[key]

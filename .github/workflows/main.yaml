@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Remove unnecessary files
         run: |
-          # Free hosted-runner disk space by removing preinstalled .NET and tool caches.
+          # Free runner disk space for the Docker build.
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout source code

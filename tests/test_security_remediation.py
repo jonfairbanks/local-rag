@@ -1,4 +1,4 @@
-"""Bounded regression checks using harmless files and mocked network clients."""
+"""Security regression tests with local fixtures and mocked network calls."""
 
 from contextlib import nullcontext
 import os

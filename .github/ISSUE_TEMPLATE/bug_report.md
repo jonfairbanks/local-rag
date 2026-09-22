@@ -1,5 +1,5 @@
 ---
-name: Bug Report
+name: Bug report
 about: Create a report to help us improve
 title: ''
 labels: bug
@@ -26,10 +26,10 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Screenshots**
-If helpful, share Settings > Advanced Settings > Diagnostics. Review screenshots and remove prompts, document content, credentials, private URLs, filenames, and paths before posting.
+If applicable, attach screenshots to help explain your problem. **A screenshot of your Settings > Advanced > Application State section can greatly aid in troubleshooting.**
 
 **Logs**
-Paste only the relevant error text after removing sensitive information. Do not attach raw logs or full application state.
+If applicable, attach log files to help explain your problem. **Reproducing your issue and sharing a copy of your `local-rag.log` can greatly aid in troubleshooting.**
 
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]

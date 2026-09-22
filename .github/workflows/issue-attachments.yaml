@@ -23,6 +23,6 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: 'If more detail is needed, share Settings > Advanced Settings > Diagnostics and the relevant error text. Review attachments first and remove prompts, document content, credentials, private URLs, filenames, and paths. Do not attach full application state or raw logs.'
+                body: 'Please provide a screenshot of the in-app state and/or a copy of your local-rag.log file to help debug this issue. For more information, please checkout the [Troubleshooting Guide](docs/troubleshooting.md).'
               });
             }

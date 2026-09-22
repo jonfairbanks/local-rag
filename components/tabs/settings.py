@@ -139,13 +139,13 @@ def settings():
             st.caption(
                 "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
             )
-            # Restored integers must become strings before keyed text widgets
-            # receive them, including after a browser reload.
+            # Text inputs need strings when settings are restored from storage.
             st.session_state["chunk_size"] = str(st.session_state["chunk_size"])
             st.session_state["chunk_overlap"] = str(st.session_state["chunk_overlap"])
             st.text_input(
                 "Chunk Size",
                 max_chars=4,
+                placeholder="1024",
                 help="Reducing `chunk_size` improves embedding precision by focusing on smaller text portions. This enhances information retrieval accuracy but escalates computational demands due to processing more chunks.",
                 key="chunk_size",
                 value=st.session_state["chunk_size"],
@@ -153,6 +153,7 @@ def settings():
             st.text_input(
                 "Chunk Overlap",
                 max_chars=4,
+                placeholder="200",
                 help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
                 key="chunk_overlap",
                 value=st.session_state["chunk_overlap"],

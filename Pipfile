@@ -24,6 +24,8 @@ colorama = { version = "*", sys_platform = "== 'win32'" }
 ebooklib = "*"
 llama-index-core = "*"
 fsspec = "*"
+docx2txt = "*"
+python-pptx = "*"
 
 [dev-packages]
 
