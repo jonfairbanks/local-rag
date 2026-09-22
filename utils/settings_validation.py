@@ -1,7 +1,6 @@
 """Shared validation for browser settings and server-side model clients."""
 
 import os
-from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
 from huggingface_hub.utils import validate_repo_id
@@ -28,7 +27,7 @@ CHAT_MODES = {
 
 
 def validate_huggingface_model(value):
-    """Accept Hub model IDs, never URLs or local model directories."""
+    """Validate Hub model-ID syntax without probing user-supplied paths."""
     if not isinstance(value, str) or not value.strip() or len(value) > 256 or not value.isascii():
         raise ValueError("Enter a Hugging Face model ID, such as sentence-transformers/all-MiniLM-L6-v2.")
     model = value.strip()
@@ -36,8 +35,6 @@ def validate_huggingface_model(value):
         validate_repo_id(model)
     except ValueError as err:
         raise ValueError("Enter a Hugging Face model ID, not a URL or file path.") from err
-    if Path(model).exists():
-        raise ValueError("Use a Hugging Face model ID, not a local directory.")
     return model
 
 

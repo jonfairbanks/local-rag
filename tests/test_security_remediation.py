@@ -217,7 +217,7 @@ class ModelIsolationTests(unittest.TestCase):
     def test_invalid_hugging_face_model_is_rejected_before_loading(self):
         from llama_index.embeddings.huggingface import HuggingFaceEmbedding
         with patch("llama_index.embeddings.huggingface.HuggingFaceEmbedding", spec=HuggingFaceEmbedding) as loader:
-            for model in ["../weights", "https://huggingface.co/org/model", "org/model/subdir", "utils"]:
+            for model in ["../weights", "https://huggingface.co/org/model", "org/model/subdir", "/tmp/model"]:
                 with self.subTest(model=model), self.assertRaises(ValueError):
                     llama_index.setup_embedding_model(model)
             loader.assert_not_called()
