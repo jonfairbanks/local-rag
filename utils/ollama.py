@@ -4,12 +4,12 @@ import os
 import streamlit as st
 
 import utils.logs as logs
+from utils.settings_validation import validate_ollama_endpoint
 
 # This is not used but required by llama-index and must be imported FIRST
 os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
 from llama_index.llms.ollama import Ollama
-from llama_index.core import Settings
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 
 ###################################
@@ -36,7 +36,10 @@ def create_client(host: str):
         This function creates a client for interacting with the Ollama API using the `ollama` library. It takes a single parameter, `host`, which should be the hostname or IP address of the Ollama server. The function returns an instance of the Ollama client, or raises an exception if there is an error creating the client.
     """
     try:
-        client = ollama.Client(host=host)
+        client = ollama.Client(
+            host=validate_ollama_endpoint(host), timeout=60,
+            follow_redirects=False, trust_env=False,
+        )
         logs.log.info("Ollama chat client created successfully")
         return client
     except Exception as err:
@@ -141,7 +144,6 @@ def get_embedding_models():
 ###################################
 
 
-@st.cache_data(show_spinner=False)
 def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, request_timeout: int = 60) -> Ollama:
     """
     Create an instance of the Ollama language model.
@@ -155,10 +157,15 @@ def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, requ
         - llm: An instance of the Ollama language model with the specified configuration.
     """
     try:
-        # Settings.llm = Ollama(model=model, base_url=base_url, system_prompt=system_prompt, request_timeout=request_timeout)
-        Settings.llm = Ollama(model=model, base_url=base_url, request_timeout=request_timeout)
+        endpoint = validate_ollama_endpoint(base_url)
+        llm = Ollama(
+            model=model, base_url=endpoint, system_prompt=system_prompt,
+            request_timeout=request_timeout,
+            client=ollama.Client(host=endpoint, timeout=request_timeout, follow_redirects=False, trust_env=False),
+            async_client=ollama.AsyncClient(host=endpoint, timeout=request_timeout, follow_redirects=False, trust_env=False),
+        )
         logs.log.info("Ollama LLM instance created successfully")
-        return Settings.llm
+        return llm
     except Exception as e:
         logs.log.error(f"Error creating Ollama language model: {e}")
         raise

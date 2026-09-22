@@ -52,9 +52,10 @@ def should_process_uploads(
     processed_signature,
     processing_signature,
     query_engine,
+    failed_signature=None,
 ):
     """Return whether uploaded files need ingestion for the current app state."""
-    if current_signature == processing_signature:
+    if current_signature in (processing_signature, failed_signature):
         return False
     return current_signature != processed_signature or query_engine is None
 
@@ -84,7 +85,7 @@ def local_files():
             func.validate_uploaded_files(uploaded_files)
         except ValueError as err:
             st.error(str(err))
-            st.stop()
+            return
 
         st.session_state["file_list"] = uploaded_files
         current_upload_signature = uploaded_files_signature(uploaded_files)
@@ -93,6 +94,7 @@ def local_files():
             st.session_state["processed_file_signature"],
             st.session_state["processing_file_signature"],
             st.session_state["query_engine"],
+            st.session_state.get("failed_file_signature"),
         )
 
         status_container = st.empty()
@@ -110,20 +112,30 @@ def local_files():
 
                     # Display errors (if any) or proceed
                     if error is not None:
+                        st.session_state["failed_file_signature"] = current_upload_signature
                         st.exception(error)
                     else:
+                        st.session_state.pop("failed_file_signature", None)
                         st.session_state["processed_file_signature"] = (
                             current_upload_signature
                         )
                 finally:
                     st.session_state["processing_file_signature"] = None
-        else:
+        elif current_upload_signature != st.session_state.get("failed_file_signature"):
             rag.render_pipeline_status(
                 status_container,
                 st.session_state["file_ingestion_stages"],
             )
 
-        if st.session_state["query_engine"] is not None:
+        if current_upload_signature == st.session_state.get("failed_file_signature"):
+            st.warning("Import failed. Adjust your settings or files, then retry.")
+            if st.session_state["query_engine"] is not None:
+                st.caption("The previous index is still available for chat.")
+            if st.button("Retry Import", key="retry_file_import"):
+                st.session_state.pop("failed_file_signature", None)
+                st.rerun()
+        elif (st.session_state["query_engine"] is not None
+              and current_upload_signature == st.session_state["processed_file_signature"]):
             st.write(
                 "Your files are ready. Let's chat! 😎"
             )  # TODO: This should be a button.

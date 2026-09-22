@@ -1,5 +1,4 @@
-import os
-import shutil
+from tempfile import TemporaryDirectory
 
 import streamlit as st
 
@@ -7,6 +6,7 @@ import utils.helpers as func
 import utils.ollama as ollama
 import utils.llama_index as llama_index
 import utils.logs as logs
+from utils.settings_validation import HF_MODELS, validate_chunk_settings
 
 MAX_INGESTED_DOCUMENTS = 1000
 MAX_INGESTED_TEXT_CHARS = 10 * 1024 * 1024
@@ -78,6 +78,34 @@ def render_completed_ingestion_status(status_container, completed_stages):
 
 
 def rag_pipeline(
+    uploaded_files=None, documents=None, data_dir=None, **kwargs
+):
+    """Commit a replacement index only after ingestion and cleanup succeed."""
+    status_key = kwargs.get("status_state_key", "file_ingestion_stages")
+    previous_stages = st.session_state.get(status_key, [])
+    completed = False
+    try:
+        if uploaded_files is not None:
+            func.validate_uploaded_files(uploaded_files)
+            if documents is not None or data_dir is not None:
+                raise ValueError("Select one ingestion source at a time.")
+            with TemporaryDirectory(prefix="local-rag-upload-") as upload_dir:
+                result = _rag_pipeline(uploaded_files=uploaded_files, data_dir=upload_dir, **kwargs)
+        else:
+            if documents is None and data_dir is None:
+                raise ValueError("An ingestion source is required.")
+            result = _rag_pipeline(documents=documents, data_dir=data_dir, **kwargs)
+        st.session_state.update(result)
+        completed = True
+        return None
+    except Exception as err:
+        return err
+    finally:
+        if not completed:
+            st.session_state[status_key] = previous_stages
+
+
+def _rag_pipeline(
     uploaded_files: list = None,
     documents: list = None,
     data_dir: str | None = None,
@@ -91,7 +119,7 @@ def rag_pipeline(
 
     Parameters:
         - uploaded_files (list, optional): List of files to be processed.
-            If none are provided, the function will load files from the current working directory.
+            Files are staged in a private temporary directory by the caller.
 
     Yields:
         - str: Successive chunks of conversation from the Ollama model with context.
@@ -100,17 +128,16 @@ def rag_pipeline(
         - Exception: If there is an error retrieving answers from the Ollama model or creating the service context.
 
     Notes:
-        This function initiates a chat with context using the Llama-Index library and the Ollama language model. It takes one optional parameter, `uploaded_files`, which should be a list of files to be processed. If no files are provided, the function will load files from the current working directory. The function returns an iterable yielding successive chunks of conversation from the Ollama model with context. If there is an error retrieving answers from the Ollama model or creating the service context, the function raises an exception.
+        Loads the explicitly supplied directory or documents and builds a session-local query engine.
 
     Context:
         - logs.log: A logger for logging events related to this function.
 
     Side Effects:
         - Creates a service context using the provided Ollama model and embedding file.
-        - Loads documents from the current working directory or the provided list of files.
-        - Removes the loaded documents and any temporary files created during processing.
+        - Loads documents from the supplied source.
+        - The caller owns cleanup of temporary upload or clone directories.
     """
-    error = None
     completed_stages = list(initial_stages or [])
 
     def record_completed_stages():
@@ -118,8 +145,7 @@ def rag_pipeline(
 
     render_pipeline_status(status_container, completed_stages)
 
-    save_dir = os.path.join(os.getcwd(), "data")
-    ingest_dir = data_dir or save_dir
+    ingest_dir = data_dir
 
     ######################################
     # Create Llama-Index service-context #
@@ -132,7 +158,6 @@ def rag_pipeline(
             st.session_state["ollama_endpoint"],
             st.session_state["system_prompt"],
         )
-        st.session_state["llm"] = llm
         completed_stages.append("LLM Initialized")
         record_completed_stages()
         render_pipeline_status(status_container, completed_stages)
@@ -141,9 +166,7 @@ def rag_pipeline(
         # print(resp)
     except Exception as err:
         logs.log.error(f"Failed to setup LLM: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     ####################################
     # Determine embedding model to use #
@@ -154,29 +177,19 @@ def rag_pipeline(
 
     if embedding_backend == "Ollama":
         selected_embedding_model = st.session_state["ollama_embedding_model"]
-    elif embedding_model is None or embedding_model == "Default (gte-modernbert-base)":
-        selected_embedding_model = "Alibaba-NLP/gte-modernbert-base"
-    elif embedding_model == "Higher Quality (Qwen3-Embedding-0.6B)":
-        selected_embedding_model = "Qwen/Qwen3-Embedding-0.6B"
+    elif embedding_model in HF_MODELS:
+        selected_embedding_model = HF_MODELS[embedding_model]
     elif embedding_model == "Other":
-        selected_embedding_model = st.session_state["other_embedding_model"]
+        selected_embedding_model = st.session_state.get("other_embedding_model")
     else:
         raise ValueError(f"Unsupported embedding model selection: {embedding_model}")
 
     try:
-        chunk_size = int(st.session_state["chunk_size"])
-        chunk_overlap = int(st.session_state["chunk_overlap"])
-        if chunk_size <= 0:
-            raise ValueError("Chunk Size must be > 0")
-        if chunk_overlap < 0:
-            raise ValueError("Chunk Overlap must be >= 0")
-        if chunk_overlap >= chunk_size:
-            raise ValueError("Chunk Overlap must be less than Chunk Size")
-
-        llama_index.setup_embedding_model(
+        chunk_size, chunk_overlap = validate_chunk_settings(
+            st.session_state["chunk_size"], st.session_state["chunk_overlap"]
+        )
+        embed_model = llama_index.setup_embedding_model(
             selected_embedding_model,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
             backend=embedding_backend,
             ollama_endpoint=st.session_state["ollama_endpoint"],
         )
@@ -185,19 +198,14 @@ def rag_pipeline(
         render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Setting up Embedding Model failed: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     try:
-        # Always reset the query engine before ingesting fresh source content.
-        st.session_state["query_engine"] = None
-
         if documents is not None:
             if len(documents) == 0:
                 raise ValueError("No documents were loaded from the selected source.")
             validate_ingested_documents(documents)
-            st.session_state["documents"] = documents
+            ingested_documents = documents
             completed_stages.append(documents_loaded_stage)
             record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
@@ -205,7 +213,7 @@ def rag_pipeline(
             if uploaded_files is not None:
                 for uploaded_file in uploaded_files:
                     with st.spinner(f"Processing {uploaded_file.name}..."):
-                        func.save_uploaded_file(uploaded_file, save_dir)
+                        func.save_uploaded_file(uploaded_file, ingest_dir)
                 completed_stages.append("Files Uploaded")
                 record_completed_stages()
                 render_pipeline_status(status_container, completed_stages)
@@ -214,15 +222,12 @@ def rag_pipeline(
             if len(ingested_documents) == 0:
                 raise ValueError("No files were found to process.")
             validate_ingested_documents(ingested_documents)
-            st.session_state["documents"] = ingested_documents
             completed_stages.append(documents_loaded_stage)
             record_completed_stages()
             render_pipeline_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Document Load Error: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
     ###########################################
     # Create an index from ingested documents #
@@ -243,8 +248,12 @@ def rag_pipeline(
         render_pipeline_status(
             status_container, completed_stages, "Generating Embeddings"
         )
-        llama_index.create_query_engine(
-            st.session_state["documents"],
+        query_engine = llama_index.create_query_engine(
+            ingested_documents,
+            llm=llm,
+            embed_model=embed_model,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
             progress_callback=update_embedding_progress,
         )
         completed_stages.append("Embeddings Generated")
@@ -253,17 +262,6 @@ def rag_pipeline(
         render_completed_ingestion_status(status_container, completed_stages)
     except Exception as err:
         logs.log.error(f"Index Creation Error: {str(err)}")
-        error = err
-        st.exception(error)
-        st.stop()
+        raise
 
-    # Remove transient on-disk ingestion files (uploads/clones) after indexing.
-    if os.path.isdir(save_dir):
-        try:
-            shutil.rmtree(save_dir)
-        except Exception as err:
-            logs.log.warning(
-                f"Unable to delete data files, you may want to clean-up manually: {str(err)}"
-            )
-
-    return error  # If no errors occurred, None is returned
+    return {"query_engine": query_engine, "documents": ingested_documents, "llm": llm}

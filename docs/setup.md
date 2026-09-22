@@ -19,7 +19,7 @@ pipenv install
 pipenv run streamlit run main.py
 ```
 
-The default Ollama endpoint is `http://localhost:11434`. You can change it in the Settings tab. The app refreshes chat and embedding model lists for the configured endpoint.
+Ollama defaults to `http://localhost:11434`; `http://127.0.0.1:11434` is also allowed. For another server, set `LOCAL_RAG_OLLAMA_ENDPOINTS` before starting the app, then select its URL in Settings. This comma-separated list replaces the defaults. Model lists refresh when the endpoint changes.
 
 Useful Ollama commands:
 
@@ -35,13 +35,21 @@ ollama list
 docker compose up -d
 ```
 
-The default Docker Compose file runs the published `jonfairbanks/local-rag` image on port `8501`, with a read-only container filesystem, tmpfs cache directories, resource limits, and an NVIDIA GPU reservation. For AMD/ROCm hosts, see `docker-compose.yml-rocm`.
+Docker Compose runs the published `jonfairbanks/local-rag` image at `http://127.0.0.1:8501`, with a read-only filesystem, tmpfs caches, resource limits, and an NVIDIA GPU reservation. For AMD/ROCm, use `docker compose -f docker-compose.yml-rocm up -d`. Both files accept `LOCAL_RAG_OLLAMA_ENDPOINTS` from the environment or a Compose `.env` file.
 
-If Ollama is running on the host rather than inside the container, point the app's Ollama endpoint at a host-reachable address. On Linux Docker, you may need this Compose setting:
+If Ollama runs on the host, add its address to the Compose `.env` file:
 
+```dotenv
+LOCAL_RAG_OLLAMA_ENDPOINTS=http://host.docker.internal:11434
 ```
+
+On Linux Docker, also add this under the `local-rag` service:
+
+```yaml
 extra_hosts:
-- 'host.docker.internal:host-gateway'
+  - 'host.docker.internal:host-gateway'
 ```
 
-Then use `http://host.docker.internal:11434` as the Ollama endpoint.
+Recreate the app container, then select `http://host.docker.internal:11434` in Settings. Ollama must accept connections from the container; use your host firewall to restrict access. The allowlist only controls which addresses Local RAG can use.
+
+For remote browser access, use an authenticated reverse proxy. Compose exposes the UI only on the local host.

@@ -2,10 +2,13 @@
 <html>
   <body>
     <script>
+      const parentOrigin = window.location.origin;
+      const storageKey = "local-rag:settings";
+
       function sendMessageToStreamlitClient(type, data) {
         window.parent.postMessage(
           Object.assign({ isStreamlitMessage: true, type: type }, data),
-          "*"
+          parentOrigin
         );
       }
 
@@ -24,13 +27,16 @@
       }
 
       function onDataFromPython(event) {
-        if (event.data.type !== "streamlit:render") return;
+        if (window.parent === window || event.source !== window.parent || event.origin !== parentOrigin) return;
+        if (!event.data || event.data.type !== "streamlit:render") return;
 
         const args = event.data.args || {};
+        if (args.storage_key !== storageKey || !["get", "set"].includes(args.action)) return;
         if (args.action === "get") {
           sendDataToPython({ value: localStorage.getItem(args.storage_key) });
         }
         if (args.action === "set") {
+          if (typeof args.value !== "string" || args.value.length > 16384) return;
           if (localStorage.getItem(args.storage_key) !== args.value) {
             localStorage.setItem(args.storage_key, args.value);
           }

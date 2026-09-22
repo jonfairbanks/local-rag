@@ -9,9 +9,12 @@ ENV PYTHONFAULTHANDLER=1
 
 FROM base AS python-deps
 
+ENV PIP_NO_CACHE_DIR=1
+
 # Install pipenv and compilation dependencies
 RUN pip install pipenv
-RUN apt-get update && apt-get install -y --no-install-recommends gcc
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies in /.venv
 COPY Pipfile .

@@ -5,6 +5,7 @@ import streamlit as st
 import utils.ollama as ollama
 from components.page_state import default_chat_model
 from utils.browser_settings import ensure_ollama_endpoint
+from utils.settings_validation import HF_MODELS, validate_ollama_endpoint, validate_huggingface_model
 
 from datetime import datetime
 
@@ -13,7 +14,7 @@ def _refresh_models():
     ensure_ollama_endpoint(st.session_state)
     ollama.get_models()
     ollama.get_embedding_models()
-    if st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
+    if st.session_state["ollama_models"] and st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
         st.session_state["selected_model"] = default_chat_model(
             st.session_state["ollama_models"]
         )
@@ -38,12 +39,17 @@ def settings():
             "Ollama Endpoint",
             key="ollama_endpoint",
             placeholder="http://localhost:11434",
+            help="The server must allow this URL through LOCAL_RAG_OLLAMA_ENDPOINTS. Documents and prompts are sent to this endpoint.",
             on_change=_refresh_models,
         )
+        try:
+            validate_ollama_endpoint(st.session_state["ollama_endpoint"])
+        except ValueError as err:
+            st.error(str(err))
         st.selectbox(
             "Chat Model",
             st.session_state["ollama_models"],
-            key="selected_model",
+            key="selected_model" if st.session_state["ollama_models"] else "unavailable_chat_model",
             disabled= len(st.session_state["ollama_models"])==0,
             placeholder= "Select Chat Model" if len(st.session_state["ollama_models"])>0 else "No Models Available",
         )
@@ -55,7 +61,7 @@ def settings():
         if st.session_state["advanced"] == True:
             st.select_slider(
                 "Top K",
-                options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                options=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                 help="The number of most similar documents to retrieve in response to a query.",
                 value=st.session_state["top_k"],
                 key="top_k",
@@ -96,7 +102,7 @@ def settings():
             st.selectbox(
                 "Embedding Model",
                 st.session_state["ollama_embedding_models"],
-                key="ollama_embedding_model",
+                key="ollama_embedding_model" if st.session_state["ollama_embedding_models"] else "unavailable_embedding_model",
                 disabled=len(st.session_state["ollama_embedding_models"]) == 0,
                 placeholder=(
                     "Select Model"
@@ -111,37 +117,45 @@ def settings():
             )
             st.caption("Need one? Pull an Ollama embedding model first, e.g. `ollama pull embeddinggemma`.")
         else:
-            embedding_model = st.selectbox(
+            st.selectbox(
                 "Model",
-                [
-                    "Default (gte-modernbert-base)",
-                    "Higher Quality (Qwen3-Embedding-0.6B)",
-                    "Other",
-                ],
+                list(HF_MODELS) + ["Other"],
                 key="embedding_model",
             )
-            if embedding_model == "Other":
-                st.text_input(
-                    "HuggingFace Model",
+            if st.session_state["embedding_model"] == "Other":
+                model = st.text_input(
+                    "Hugging Face Model ID",
                     key="other_embedding_model",
-                    placeholder="Qwen/Qwen3-Embedding-0.6B",
+                    max_chars=256,
+                    placeholder="sentence-transformers/all-MiniLM-L6-v2",
+                    help="Choose a trusted embedding model with safetensors weights. Remote Python code is disabled.",
                 )
+                if model:
+                    try:
+                        validate_huggingface_model(model)
+                    except ValueError as err:
+                        st.error(str(err))
         if st.session_state["advanced"] == True:
             st.caption(
                 "View the [MTEB Embeddings Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)"
             )
+            # Text inputs need strings when settings are restored from storage.
+            st.session_state["chunk_size"] = str(st.session_state["chunk_size"])
+            st.session_state["chunk_overlap"] = str(st.session_state["chunk_overlap"])
             st.text_input(
                 "Chunk Size",
+                max_chars=4,
+                placeholder="1024",
                 help="Reducing `chunk_size` improves embedding precision by focusing on smaller text portions. This enhances information retrieval accuracy but escalates computational demands due to processing more chunks.",
                 key="chunk_size",
-                placeholder="1024",
                 value=st.session_state["chunk_size"],
             )
             st.text_input(
                 "Chunk Overlap",
+                max_chars=4,
+                placeholder="200",
                 help="The amount of overlap between two consecutive chunks. A higher overlap value helps maintain continuity and context across chunks.",
                 key="chunk_overlap",
-                placeholder="200",
                 value=st.session_state["chunk_overlap"],
             )
 
@@ -156,9 +170,17 @@ def settings():
             mime="application/json",
         )
 
-    st.toggle("Advanced Settings", key="advanced")
+    st.toggle("Advanced Settings", key="advanced", value=st.session_state["advanced"])
 
     if st.session_state["advanced"] == True:
-        with st.expander("Current Application State"):
-            state = dict(sorted(st.session_state.items()))
-            st.write(state)
+        with st.expander("Diagnostics"):
+            st.json(sanitized_diagnostics(st.session_state))
+
+
+def sanitized_diagnostics(state):
+    """Expose status only, without document content, prompts, URLs, or paths."""
+    return {
+        "documents_loaded": bool(state.get("documents")),
+        "llm_ready": state.get("llm") is not None,
+        "index_ready": state.get("query_engine") is not None,
+    }

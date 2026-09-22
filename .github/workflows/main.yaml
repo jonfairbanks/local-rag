@@ -14,35 +14,36 @@ name: Docker Build
 
 env:
   TERM: 'xterm'
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 permissions:
   contents: read
 
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  docker:
-    name: Build Docker Image
+  version:
+    name: Tag Release
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.bump-tag.outputs.new_tag }}
     steps:
-      - name: Remove unnecessary files
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Checkout source code
-        id: checkout-code
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Bump version and push tag
         id: bump-tag
-        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           release_floor="v2.0.0"
           latest_tag=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
           if [[ -z "$latest_tag" ]]; then
@@ -58,40 +59,57 @@ jobs:
             fi
           fi
 
-          git tag "$new_tag"
-          git push origin "$new_tag"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f "ref=refs/tags/$new_tag" -f "sha=$GITHUB_SHA"
           echo "new_tag=${new_tag}" >> "$GITHUB_OUTPUT"
+
+  docker:
+    name: Build Docker Image
+    needs: version
+    if: ${{ always() && !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Remove unnecessary files
+        run: |
+          # Free runner disk space for the Docker build.
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Build Docker Tags
         id: docker-tags
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
         run: |
           if [[ "${{ github.event_name }}" = "pull_request" ]]; then
             TAGS="${{ github.repository }}:pr-${{ github.event.pull_request.number }}"
           elif [[ "${{ github.ref_name }}" = "develop" ]]; then
             TAGS="${{ github.repository }}:develop"
           elif [[ "${{ github.ref_name }}" = "main" || "${{ github.ref_name }}" = "master" ]]; then
-            TAGS="${{ github.repository }}:${{ steps.bump-tag.outputs.new_tag }},${{ github.repository }}:latest"
+            TAGS="${{ github.repository }}:${RELEASE_TAG},${{ github.repository }}:latest"
           fi
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        id: setup-qemu
-        uses: docker/setup-qemu-action@v4.4.0
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         id: setup-buildx
-        uses: docker/setup-buildx-action@v4.4.1
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Login to DockerHub
         if: github.event_name == 'push'
-        uses: docker/login-action@v4.6.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
         
       - name: Build Docker Image
         id: docker-build
-        uses: docker/build-push-action@v7.4.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.setup-buildx.outputs.name }}
           context: ./
@@ -100,11 +118,21 @@ jobs:
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.docker-tags.outputs.tags }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # PRs read the cache; branch builds refresh it.
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max' || '' }}
 
+  notify:
+    name: Notify Slack
+    needs: [version, docker]
+    if: ${{ always() && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
       - name: Notify Slack
-        if: ${{ always() && github.event_name == 'push' && env.SLACK_WEBHOOK_URL != '' }}
-        uses: act10ns/slack@v2.2.0
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: act10ns/slack@d96404edccc6d6467fc7f8134a420c851b1e9054 # v2.2.0
         with:
-          status: ${{ job.status }}
-          steps: ${{ toJson(steps) }}
+          status: ${{ needs.version.result == 'failure' && 'failure' || needs.docker.result }}
