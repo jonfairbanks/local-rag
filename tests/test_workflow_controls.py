@@ -1,6 +1,9 @@
 from pathlib import Path
+import json
+import os
 import re
 import subprocess
+import tempfile
 import unittest
 
 import yaml
@@ -93,10 +96,122 @@ const context = { repo: { owner: 'test', repo: 'test' }, issue: { number: 1 }, p
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_compose_only_publishes_to_loopback(self):
-        config = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
+        for name in (
+            "docker-compose.yml",
+            "docker-compose.yml-cpu",
+            "docker-compose.yml-rocm",
+        ):
+            with self.subTest(name=name):
+                config = yaml.safe_load((ROOT / name).read_text())
+                self.assertEqual(
+                    config["services"]["local-rag"]["ports"],
+                    ["127.0.0.1:8501:8501/tcp"],
+                )
+
+    def test_native_builds_share_a_required_gate(self):
+        jobs = yaml.safe_load((ROOT / ".github/workflows/main.yaml").read_text())[
+            "jobs"
+        ]
+        build = jobs["build"]
         self.assertEqual(
-            config["services"]["local-rag"]["ports"], ["127.0.0.1:8501:8501/tcp"]
+            {
+                (row["arch"], row["runner"])
+                for row in build["strategy"]["matrix"]["include"]
+            },
+            {("amd64", "ubuntu-24.04"), ("arm64", "ubuntu-24.04-arm")},
         )
+        self.assertEqual(jobs["docker"]["name"], "Build Docker Image")
+        self.assertIn("build", jobs["docker"]["needs"])
+        self.assertEqual(jobs["docker"]["if"], "always()")
+        gate = jobs["docker"]["steps"][0]["run"]
+        for status in ("success", "failure", "cancelled", "skipped"):
+            result = subprocess.run(
+                ["bash", "-c", gate], env={**os.environ, "BUILD_RESULT": status}
+            )
+            self.assertEqual(result.returncode == 0, status == "success")
+
+    def test_pr_builds_do_not_publish_or_export_cache(self):
+        jobs = yaml.safe_load((ROOT / ".github/workflows/main.yaml").read_text())[
+            "jobs"
+        ]
+        for job in (jobs["build"], jobs["docker"]):
+            for step in job["steps"]:
+                config = step.get("with", {})
+                if any(key in config for key in ("cache-to", "password", "outputs")):
+                    self.assertEqual(step.get("if"), "github.event_name == 'push'")
+        test_step = next(
+            s
+            for s in jobs["build"]["steps"]
+            if s.get("with", {}).get("target") == "test"
+        )
+        self.assertIn("matrix.arch", test_step["with"]["cache-from"])
+        self.assertNotIn("cache-to", test_step["with"])
+
+    def test_manifest_uses_both_digests_and_expected_tags(self):
+        jobs = yaml.safe_load((ROOT / ".github/workflows/main.yaml").read_text())[
+            "jobs"
+        ]
+        step = jobs["docker"]["steps"][-1]
+        self.assertEqual(step["if"], "github.event_name == 'push'")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "digests").mkdir()
+            for arch, char in (("amd64", "a"), ("arm64", "b")):
+                (root / "digests" / f"{arch}.digest").write_text(
+                    f"sha256:{char * 64}\n"
+                )
+            docker = root / "docker"
+            docker.write_text("""#!/usr/bin/env python3
+import json, os, sys
+from pathlib import Path
+if sys.argv[3] == "create":
+    Path(os.environ["MOCK_OUTPUT"]).write_text(json.dumps(sys.argv[1:]))
+elif sys.argv[3] == "inspect":
+    print(json.dumps({"manifests": [{"platform": {"os": "linux", "architecture": arch}} for arch in ("amd64", "arm64")]}))
+else:
+    sys.exit(1)
+""")
+            docker.chmod(0o755)
+            output = root / "arguments.json"
+            env = {
+                **os.environ,
+                "PATH": f"{root}:{os.environ['PATH']}",
+                "RUNNER_TEMP": str(root),
+                "MOCK_OUTPUT": str(output),
+                "IMAGE": "example/local-rag",
+                "RELEASE_TAG": "v2.1.0",
+            }
+            for branch, tags in (
+                ("develop", ["develop"]),
+                ("main", ["v2.1.0", "latest"]),
+            ):
+                result = subprocess.run(
+                    ["bash", "-eo", "pipefail", "-c", step["run"]],
+                    env={**env, "GITHUB_REF_NAME": branch},
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                args = json.loads(output.read_text())
+                actual_tags = [
+                    args[i + 1] for i, arg in enumerate(args) if arg == "--tag"
+                ]
+                self.assertEqual(
+                    actual_tags, [f"example/local-rag:{tag}" for tag in tags]
+                )
+                self.assertEqual(
+                    args[-2:],
+                    [f"example/local-rag@sha256:{char * 64}" for char in "ab"],
+                )
+            output.unlink()
+            (root / "digests/arm64.digest").unlink()
+            result = subprocess.run(
+                ["bash", "-eo", "pipefail", "-c", step["run"]],
+                env={**env, "GITHUB_REF_NAME": "develop"},
+                capture_output=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

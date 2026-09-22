@@ -1,0 +1,26 @@
+services:
+  local-rag:
+    container_name: local-rag
+    image: jonfairbanks/local-rag
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=512m
+      - /home/appuser/.cache:rw,noexec,nosuid,nodev,size=2g
+    volumes:
+      - local-rag-data:/home/appuser/data
+    environment:
+      - TZ=America/Los_Angeles
+      - LOCAL_RAG_OLLAMA_ENDPOINTS=${LOCAL_RAG_OLLAMA_ENDPOINTS:-http://localhost:11434,http://127.0.0.1:11434}
+    ports:
+      - '127.0.0.1:8501:8501/tcp'
+    mem_limit: 8g
+    cpus: 4
+    pids_limit: 512
+
+volumes:
+  local-rag-data:
