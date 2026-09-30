@@ -52,6 +52,9 @@ jobs:
             pr_url="$(gh pr create --base main --head develop \
               --title "Promote Develop to Main" --body-file "$RUNNER_TEMP/release-pr.md")"
           fi
+          gh pr view "$pr_url" --json isCrossRepository,headRefName,baseRefName \
+            --jq '(.isCrossRepository == false) and (.headRefName == "develop") and (.baseRefName == "main")' \
+            | grep -qx true || { echo "Release PR must come from this repository's develop branch." >&2; exit 1; }
           echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "head_sha=$(gh pr view "$pr_url" --json headRefOid --jq '.headRefOid')" >> "$GITHUB_OUTPUT"
 
