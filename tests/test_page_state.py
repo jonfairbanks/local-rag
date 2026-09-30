@@ -76,6 +76,8 @@ class PageStateTests(unittest.TestCase):
             "components.page_state.restore_settings_from_browser_storage",
             side_effect=restore_from_local_storage,
         ), patch(
+            "components.page_state.get_model_capabilities", return_value=[]
+        ) as get_capabilities, patch(
             "components.page_state.get_models", return_value=["gemma4:latest"]
         ) as get_models, patch(
             "components.page_state.get_embedding_models",
@@ -83,8 +85,9 @@ class PageStateTests(unittest.TestCase):
         ) as get_embedding_models:
             set_initial_state()
 
-        get_models.assert_called_once()
-        get_embedding_models.assert_called_once()
+        get_capabilities.assert_called_once()
+        get_models.assert_called_once_with([])
+        get_embedding_models.assert_called_once_with([])
         self.assertEqual(state["ollama_endpoint"], "http://192.168.4.2:11434")
         self.assertEqual(state["ollama_models_endpoint"], "http://192.168.4.2:11434")
         self.assertEqual(
@@ -106,6 +109,8 @@ class PageStateTests(unittest.TestCase):
         with patch("components.page_state.st.session_state", state), patch(
             "components.page_state.restore_settings_from_browser_storage"
         ), patch(
+            "components.page_state.get_model_capabilities", return_value=[]
+        ) as get_capabilities, patch(
             "components.page_state.get_models", return_value=["gemma4:latest"]
         ) as get_models, patch(
             "components.page_state.get_embedding_models",
@@ -113,8 +118,9 @@ class PageStateTests(unittest.TestCase):
         ) as get_embedding_models:
             set_initial_state()
 
-        get_models.assert_called_once()
-        get_embedding_models.assert_called_once()
+        get_capabilities.assert_called_once()
+        get_models.assert_called_once_with([])
+        get_embedding_models.assert_called_once_with([])
         self.assertEqual(state["ollama_endpoint"], "http://localhost:11434")
         self.assertEqual(state["ollama_models_endpoint"], "http://localhost:11434")
         self.assertEqual(

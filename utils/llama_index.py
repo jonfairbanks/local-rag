@@ -83,6 +83,15 @@ class OllamaEmbedding(BaseEmbedding):
     def _get_text_embedding(self, text: str):
         return self._client().embed(model=self.model_name, input=text).embeddings[0]
 
+    def _get_text_embeddings(self, texts: list[str]):
+        """Send one Ollama request per batch while preserving text order."""
+        if not texts:
+            return []
+        embeddings = self._client().embed(model=self.model_name, input=texts).embeddings
+        if len(embeddings) != len(texts):
+            raise ValueError("Ollama returned an unexpected number of embeddings.")
+        return embeddings
+
 
 ###################################
 #

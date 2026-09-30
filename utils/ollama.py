@@ -82,14 +82,30 @@ def default_embedding_model(models):
     return None
 
 
-def get_models():
+def get_model_capabilities():
+    """Read installed model capabilities once for a discovery operation."""
+    try:
+        client = create_client(st.session_state["ollama_endpoint"])
+        result = []
+        for name in _get_installed_model_names(client):
+            details = client.show(name)
+            capabilities = getattr(details, "capabilities", None) or details.get(
+                "capabilities", []
+            )
+            result.append((name, capabilities))
+        return result
+    except Exception as err:
+        logs.log.error(f"Failed to retrieve Ollama model capabilities: {err}")
+        return []
+
+
+def get_models(model_capabilities=None):
     """Return installed Ollama models that declare completion capability."""
     try:
-        chat_client = create_client(st.session_state["ollama_endpoint"])
         models = []
-        for model_name in _get_installed_model_names(chat_client):
-            details = chat_client.show(model_name)
-            capabilities = getattr(details, "capabilities", None) or details.get("capabilities", [])
+        if model_capabilities is None:
+            model_capabilities = get_model_capabilities()
+        for model_name, capabilities in model_capabilities:
             if "completion" in capabilities:
                 models.append(model_name)
 
@@ -107,15 +123,13 @@ def get_models():
         return []
 
 
-def get_embedding_models():
+def get_embedding_models(model_capabilities=None):
     """Return installed Ollama models that declare embedding capability."""
     try:
-        chat_client = create_client(st.session_state["ollama_endpoint"])
         embedding_models = []
-
-        for model_name in _get_installed_model_names(chat_client):
-            details = chat_client.show(model_name)
-            capabilities = getattr(details, "capabilities", None) or details.get("capabilities", [])
+        if model_capabilities is None:
+            model_capabilities = get_model_capabilities()
+        for model_name, capabilities in model_capabilities:
             if "embedding" in capabilities:
                 embedding_models.append(model_name)
 
