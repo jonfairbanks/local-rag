@@ -20,20 +20,35 @@ To fix this:
 
 Settings are restored from browser `localStorage`. If a stale browser setting points to the wrong Ollama endpoint or a model you no longer have installed, update it in Settings and refresh the model lists. Empty Ollama endpoint values are ignored and the default endpoint is restored.
 
-## Application State
+Blocked endpoints stay visible in Settings. Add the address to `LOCAL_RAG_OLLAMA_ENDPOINTS` on the server or choose an allowed endpoint.
 
-Each stage of the RAG pipeline stores its data in the application state. 
+## Diagnostics
 
-In order for a successful RAG conversation to take place the following state values must NOT be null:
-- `documents` - if null, there was an error processing your documents
-- `llm` - if null, there was an error creating the Ollama LLM instance
-- `query_engine` - if null, errors occurred when creating embeddings for your your documents
+Open Settings, enable Advanced Settings, and expand Diagnostics to check whether documents, the LLM, and the index are ready. No document content or chat history is shown.
 
-To view the current application state:
-- Navigate to the Settings panel
-- Toggle Advanced Settings
-- State is now visible at the bottom of Settings
-- Verify that the above state values are valid
+Remove private data before sharing screenshots or logs in an issue.
+
+## Allowed Model Endpoints
+
+Local RAG allows `http://localhost:11434` and `http://127.0.0.1:11434` by default. To use another Ollama server, set a comma-separated list of HTTP or HTTPS addresses before starting the app:
+
+```bash
+LOCAL_RAG_OLLAMA_ENDPOINTS=http://192.168.4.2:11434 pipenv run streamlit run main.py
+```
+
+This replaces the defaults, so include localhost if needed. Use a scheme, host, and optional port, without credentials or a path, query, or fragment. Redirects and environment proxies are disabled. Use hosts and DNS you trust, since the selected server receives your documents and prompts.
+
+For Docker host routing and remote UI access, see [Setup](setup.md#docker).
+
+## Ingestion Limits
+
+Uploads and clones use private temporary directories that are cleaned up after ingestion. The old shared `data/` directory is no longer used; review and remove its contents yourself when upgrading.
+
+Chunk Size accepts 256 to 8192 tokens. Chunk Overlap accepts 0 to 2048, up to half of Chunk Size. Indexing stops at 10,000 chunks. ZIP-based documents are checked for excessive entries, expanded size, and compression ratios before parsing.
+
+Hugging Face models must provide safetensors weights and work without remote Python code. Use **Other** for a custom model ID from a repository you trust. Built-in models use pinned revisions; custom models use `main`.
+
+If an import fails, correct the settings and select **Retry Import**, or change the files. Chat keeps using the previous source and model until an import succeeds.
 
 ## Import Errors
 

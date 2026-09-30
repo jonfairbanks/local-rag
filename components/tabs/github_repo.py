@@ -1,4 +1,5 @@
 import streamlit as st
+from tempfile import TemporaryDirectory
 
 import utils.helpers as func
 import utils.rag_pipeline as rag
@@ -62,20 +63,21 @@ def github_repo():
                 rag.render_pipeline_status(
                     status_container, completed_stages, "Cloning Repository"
                 )
-                cloned_repo_dir = func.clone_github_repo(repo)
-                if not cloned_repo_dir:
-                    st.error("Failed to clone repository. Check the repo value and logs.")
-                    st.stop()
-                completed_stages.append("Repository Cloned")
-                rag.render_pipeline_status(status_container, completed_stages)
+                with TemporaryDirectory(prefix="local-rag-repo-") as clone_dir:
+                    cloned_repo_dir = func.clone_github_repo(repo, clone_dir)
+                    if not cloned_repo_dir:
+                        st.error("Failed to clone repository. Check the repo value and logs.")
+                        st.stop()
+                    completed_stages.append("Repository Cloned")
+                    rag.render_pipeline_status(status_container, completed_stages)
 
-                error = rag.rag_pipeline(
-                    data_dir=cloned_repo_dir,
-                    status_container=status_container,
-                    initial_stages=completed_stages,
-                    status_state_key="github_ingestion_stages",
-                    documents_loaded_stage=GITHUB_DOCUMENTS_LOADED_STAGE,
-                )
+                    error = rag.rag_pipeline(
+                        data_dir=cloned_repo_dir,
+                        status_container=status_container,
+                        initial_stages=completed_stages,
+                        status_state_key="github_ingestion_stages",
+                        documents_loaded_stage=GITHUB_DOCUMENTS_LOADED_STAGE,
+                    )
                 if error is not None:
                     st.exception(error)
                 else:

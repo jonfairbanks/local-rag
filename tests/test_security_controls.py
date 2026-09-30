@@ -112,9 +112,9 @@ class GitHubRepoValidationTests(unittest.TestCase):
                 with patch.object(helpers.subprocess, "run") as mock_run:
                     mock_run.return_value = Mock(returncode=0)
 
-                    destination = helpers.clone_github_repo("owner/repo")
+                    destination = helpers.clone_github_repo("owner/repo", tmpdir)
 
-        self.assertEqual(destination, str(Path(tmpdir) / "data" / "owner" / "repo"))
+        self.assertEqual(destination, str(Path(tmpdir) / "repository"))
 
 
 class IngestionLimitTests(unittest.TestCase):

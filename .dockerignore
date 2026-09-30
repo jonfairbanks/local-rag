@@ -2,6 +2,9 @@
 .gitignore
 .gitattributes
 .cache
+.venv
+__pycache__
+*.pyc
 *.md
 *.example
 LICENSE

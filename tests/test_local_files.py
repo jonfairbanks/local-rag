@@ -33,6 +33,11 @@ class UploadedFilesSignatureTests(unittest.TestCase):
 
 
 class ShouldProcessUploadsTests(unittest.TestCase):
+    def test_failed_upload_waits_for_retry_but_changed_file_can_proceed(self):
+        self.assertFalse(should_process_uploads(("bad",), ("old",), None, object(), ("bad",)))
+        self.assertTrue(should_process_uploads(("new",), ("old",), None, object(), ("bad",)))
+        self.assertTrue(should_process_uploads(("bad",), ("old",), None, object(), None))
+
     def test_reuses_existing_index_for_same_uploads(self):
         self.assertFalse(
             should_process_uploads(

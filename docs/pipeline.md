@@ -18,7 +18,7 @@ Local RAG builds an in-memory LlamaIndex query engine from one source at a time:
 6. Split documents into chunks using the configured chunk size and chunk overlap.
 7. Generate embeddings and display exact progress while indexing.
 8. Create a streaming LlamaIndex query engine with the configured `top_k` and response mode.
-9. Remove transient on-disk ingestion files from `data/`.
+9. Remove transient on-disk ingestion files from the operation's private temporary directory.
 
 ## Source-Specific Stages
 
