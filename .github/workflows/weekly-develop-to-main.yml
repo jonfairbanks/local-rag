@@ -1,0 +1,131 @@
+name: Weekly Develop to Main
+
+on:
+  schedule:
+    # Match F5's Monday schedule and avoid the start-of-hour rush.
+    - cron: "17 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: weekly-develop-to-main
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote Develop to Main
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Detect Unreleased Develop Changes
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ahead_by="$(gh api "repos/$GH_REPO/compare/main...develop" --jq '.ahead_by')"
+          echo "has_changes=$([ "$ahead_by" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or Find Release PR
+        if: steps.changes.outputs.has_changes == 'true'
+        id: release
+        env:
+          # A personal token lets PR creation trigger normal pull_request checks.
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          test -n "$GH_TOKEN" || { echo "PERSONAL_TOKEN is required for release promotion." >&2; exit 1; }
+          pr_url="$(gh pr list --base main --head develop --state open --json url --jq '.[0].url')"
+          if [ -z "$pr_url" ]; then
+            cat > "$RUNNER_TEMP/release-pr.md" <<'BODY'
+          ## Summary
+
+          - Promote `develop` to `main` for the weekly release.
+          - Merge after checks pass, then publish the versioned and latest Docker images through the main push workflow.
+          BODY
+            pr_url="$(gh pr create --base main --head develop \
+              --title "Promote Develop to Main" --body-file "$RUNNER_TEMP/release-pr.md")"
+          fi
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(gh pr view "$pr_url" --json headRefOid --jq '.headRefOid')" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for Checks and Merge the Release
+        if: steps.changes.outputs.has_changes == 'true'
+        timeout-minutes: 35
+        env:
+          # A personal token also lets the merge trigger the main release workflow.
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          PR_URL: ${{ steps.release.outputs.pr_url }}
+          HEAD_SHA: ${{ steps.release.outputs.head_sha }}
+        run: |
+          required_checks='["Static warning checks","Tests and compile checks","Build Docker Image"]'
+          ready=false
+          for attempt in {1..180}; do
+            test "$(gh pr view "$PR_URL" --json headRefOid --jq '.headRefOid')" = "$HEAD_SHA" || {
+              echo "Develop changed during promotion. Run the workflow again for the new commit." >&2
+              exit 1
+            }
+            checks="$(gh api --paginate "repos/$GH_REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+              --jq '.check_runs[]' | jq -s 'group_by([.app.id, .name]) | map(max_by(.id))')"
+            failures="$(jq -r '.[] | select(.status == "completed" and (.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .conclusion == "action_required" or .conclusion == "stale")) | .name' <<< "$checks")"
+            if [ -n "$failures" ]; then
+              echo "Release checks failed: $failures" >&2
+              exit 1
+            fi
+            missing="$(jq -r --argjson required "$required_checks" '
+              . as $checks | $required[] as $name
+              | select(any($checks[]; .app.slug == "github-actions" and .name == $name and .status == "completed" and .conclusion == "success") | not)
+              | $name' <<< "$checks")"
+            pending="$(jq -r '.[] | select(.status != "completed") | .name' <<< "$checks")"
+            if [ -z "$missing" ] && [ -z "$pending" ]; then
+              ready=true
+              break
+            fi
+            echo "Waiting for checks on $HEAD_SHA: $missing $pending"
+            sleep 10
+          done
+          test "$ready" = true || { echo "Timed out waiting for release checks." >&2; exit 1; }
+          # Use normal branch protection and preserve develop's merge ancestry.
+          gh pr merge "$PR_URL" --merge --auto --match-head-commit "$HEAD_SHA"
+          for attempt in {1..30}; do
+            state="$(gh pr view "$PR_URL" --json state --jq '.state')"
+            if [ "$state" = MERGED ]; then
+              exit 0
+            fi
+            test "$state" = OPEN || { echo "Release PR closed without merging." >&2; exit 1; }
+            test "$(gh pr view "$PR_URL" --json headRefOid --jq '.headRefOid')" = "$HEAD_SHA" || {
+              gh pr merge "$PR_URL" --disable-auto
+              echo "Develop changed before the merge. Auto-merge disabled; rerun promotion." >&2
+              exit 1
+            }
+            sleep 10
+          done
+          gh pr merge "$PR_URL" --disable-auto
+          echo "Timed out waiting for the merge. Auto-merge disabled." >&2
+          exit 1
+
+      - name: Wait for Docker Release Publication
+        if: steps.changes.outputs.has_changes == 'true'
+        timeout-minutes: 50
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.release.outputs.pr_url }}
+        run: |
+          release_sha="$(gh pr view "$PR_URL" --json mergeCommit --jq '.mergeCommit.oid')"
+          run_id=""
+          for attempt in {1..30}; do
+            run_id="$(gh run list --workflow main.yaml --branch main --event push --limit 30 \
+              --json databaseId,headSha --jq ".[] | select(.headSha == \"$release_sha\") | .databaseId" | head -n 1)"
+            if [ -n "$run_id" ]; then
+              break
+            fi
+            sleep 10
+          done
+          test -n "$run_id" || { echo "No Docker release run found for $release_sha." >&2; exit 1; }
+          gh run watch "$run_id" --exit-status --interval 10
