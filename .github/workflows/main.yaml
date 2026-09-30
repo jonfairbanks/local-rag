@@ -120,7 +120,8 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           target: runtime
           outputs: type=image,name=${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
-          cache-to: type=gha,scope=local-rag-${{ matrix.arch }},mode=max
+          # Develop owns the shared cache; releases reuse it without exporting it again.
+          cache-to: ${{ github.ref_name == 'develop' && format('type=gha,scope=local-rag-{0},mode=max', matrix.arch) || '' }}
 
       - name: Save Image Digest
         if: github.event_name == 'push'
