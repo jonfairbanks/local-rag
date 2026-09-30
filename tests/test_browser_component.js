@@ -3,7 +3,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const html = fs.readFileSync('utils/browser_storage_component/index.html', 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const scriptPattern = /<script>([\s\S]*?)<\/script>/i;
+const script = html.match(scriptPattern)[1];
+assert.equal(html.toUpperCase().match(scriptPattern)[1], script.toUpperCase());
 const values = new Map();
 const replies = [];
 let receive;
