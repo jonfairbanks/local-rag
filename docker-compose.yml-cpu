@@ -21,13 +21,6 @@ services:
     mem_limit: 8g
     cpus: 4
     pids_limit: 512
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['0']
-              capabilities: [gpu]
 
 volumes:
   local-rag-data:
