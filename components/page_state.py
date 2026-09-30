@@ -2,7 +2,12 @@ import streamlit as st
 
 import utils.logs as logs
 
-from utils.ollama import default_embedding_model, get_models, get_embedding_models
+from utils.ollama import (
+    default_embedding_model,
+    get_models,
+    get_embedding_models,
+    get_model_capabilities,
+)
 from utils.browser_settings import (
     ensure_ollama_endpoint,
     restore_settings_from_browser_storage,
@@ -61,18 +66,25 @@ def set_initial_state():
     if "embedding_model" not in st.session_state:
         st.session_state["embedding_model"] = "Default (gte-modernbert-base)"
 
-    if should_refresh_models_for_endpoint(st.session_state, "ollama_models"):
+    refresh_chat = should_refresh_models_for_endpoint(st.session_state, "ollama_models")
+    refresh_embedding = should_refresh_models_for_endpoint(
+        st.session_state, "ollama_embedding_models"
+    )
+    model_capabilities = (
+        get_model_capabilities() if refresh_chat and refresh_embedding else None
+    )
+    if refresh_chat:
         try:
-            models = get_models()
+            models = get_models(model_capabilities)
             st.session_state["ollama_models"] = models
         except Exception:
             st.session_state["ollama_models"] = []
             pass
         st.session_state["ollama_models_endpoint"] = st.session_state["ollama_endpoint"]
 
-    if should_refresh_models_for_endpoint(st.session_state, "ollama_embedding_models"):
+    if refresh_embedding:
         try:
-            models = get_embedding_models()
+            models = get_embedding_models(model_capabilities)
             st.session_state["ollama_embedding_models"] = models
         except Exception:
             st.session_state["ollama_embedding_models"] = []

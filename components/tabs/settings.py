@@ -12,8 +12,9 @@ from datetime import datetime
 
 def _refresh_models():
     ensure_ollama_endpoint(st.session_state)
-    ollama.get_models()
-    ollama.get_embedding_models()
+    model_capabilities = ollama.get_model_capabilities()
+    ollama.get_models(model_capabilities)
+    ollama.get_embedding_models(model_capabilities)
     if st.session_state["ollama_models"] and st.session_state.get("selected_model") not in st.session_state["ollama_models"]:
         st.session_state["selected_model"] = default_chat_model(
             st.session_state["ollama_models"]
