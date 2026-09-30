@@ -2,8 +2,9 @@ name: Weekly Develop to Main
 
 on:
   schedule:
-    # Match F5's Monday schedule and avoid the start-of-hour rush.
-    - cron: "17 12 * * 1"
+    # Keep the release at 2:15 PM Pacific through daylight saving changes.
+    - cron: "15 14 * * 1"
+      timezone: "America/Los_Angeles"
   workflow_dispatch:
 
 permissions:
