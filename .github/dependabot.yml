@@ -1,6 +1,22 @@
 version: 2
 
 updates:
+  - package-ecosystem: "docker"
+    target-branch: "develop"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "America/Los_Angeles"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+
   - package-ecosystem: "pip"
     target-branch: "develop"
     directory: "/"
