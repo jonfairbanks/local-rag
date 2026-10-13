@@ -51,7 +51,7 @@ Upload limits:
 - 25 MB per file
 - 100 MB total per upload
 
-Uploads use a private temporary directory, cleaned up after each import. Unchanged files reuse the existing index. Archive expansion is limited, and an index can contain up to 10,000 chunks.
+Uploads use a private temporary directory, cleaned up after each import. Filenames must be unique, including when only their letter case differs. Unchanged files reuse their index while that source is active. After importing another source, select **Reimport Files** to use those uploads again. Archive expansion is limited, and an index can contain up to 10,000 chunks.
 
 ### GitHub Repositories
 
@@ -67,6 +67,10 @@ Compose gives `/tmp` 512 MB, shared by imports and clone metadata. Increase its 
 ### Websites
 
 Website ingestion accepts up to 5 public HTTPS URLs at a time. If you enter a hostname without a scheme, Local RAG adds `https://`.
+
+Use **Remove** beside a URL or **Clear Websites** to edit the list. A sixth URL is rejected before it changes the saved list.
+
+Each successful import replaces the active source for chat. Failed imports preserve the previous source and index. If a chat response fails, partial text is marked incomplete; select **Retry** to repeat the query.
 
 Guardrails:
 

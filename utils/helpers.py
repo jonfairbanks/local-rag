@@ -5,6 +5,7 @@ import re
 import socket
 import requests
 import subprocess
+from contextlib import closing
 from pathlib import Path
 from zipfile import ZipFile, BadZipFile
 from urllib.parse import urljoin, urlparse
@@ -144,56 +145,55 @@ def validate_website_urls(urls: list[str]) -> list[str]:
 def load_website_documents(urls: list[str]) -> list[Document]:
     """Fetch website content with SSRF and response-size guardrails."""
     documents = []
-    session = requests.Session()
+    validated_urls = validate_website_urls(urls)
+    with closing(requests.Session()) as session:
+        for url in validated_urls:
+            current_url = url
+            for _ in range(MAX_WEBSITE_REDIRECTS + 1):
+                current_url = _validate_public_http_url(current_url)
+                with closing(session.get(
+                    current_url,
+                    allow_redirects=False,
+                    stream=True,
+                    timeout=WEBSITE_REQUEST_TIMEOUT,
+                    headers={"User-Agent": "local-rag/website-ingestion"},
+                )) as response:
+                    if response.is_redirect:
+                        location = response.headers.get("Location")
+                        if not location:
+                            raise ValueError(
+                                f"Redirect from {current_url} did not include a Location header."
+                            )
+                        current_url = urljoin(current_url, location)
+                        continue
 
-    for url in validate_website_urls(urls):
-        current_url = url
-        for _ in range(MAX_WEBSITE_REDIRECTS + 1):
-            current_url = _validate_public_http_url(current_url)
-            response = session.get(
-                current_url,
-                allow_redirects=False,
-                stream=True,
-                timeout=WEBSITE_REQUEST_TIMEOUT,
-                headers={"User-Agent": "local-rag/website-ingestion"},
-            )
+                    response.raise_for_status()
+                    content_type = response.headers.get("Content-Type", "")
+                    if "text/html" not in content_type and "text/plain" not in content_type:
+                        raise ValueError(
+                            f"Unsupported website content type: {content_type or 'unknown'}"
+                        )
 
-            if response.is_redirect:
-                location = response.headers.get("Location")
-                if not location:
-                    raise ValueError(
-                        f"Redirect from {current_url} did not include a Location header."
+                    chunks = []
+                    total_bytes = 0
+                    for chunk in response.iter_content(chunk_size=64 * 1024):
+                        if not chunk:
+                            continue
+                        total_bytes += len(chunk)
+                        if total_bytes > MAX_WEBSITE_RESPONSE_BYTES:
+                            raise ValueError("Website response is too large to process.")
+                        chunks.append(chunk)
+
+                    html = b"".join(chunks).decode(
+                        response.encoding or "utf-8", errors="replace"
                     )
-                current_url = urljoin(current_url, location)
-                continue
-
-            response.raise_for_status()
-            content_type = response.headers.get("Content-Type", "")
-            if "text/html" not in content_type and "text/plain" not in content_type:
+                    text = html2text.html2text(html) if "text/html" in content_type else html
+                    documents.append(Document(text=text, metadata={"source": current_url}))
+                    break
+            else:
                 raise ValueError(
-                    f"Unsupported website content type: {content_type or 'unknown'}"
+                    f"Website exceeded {MAX_WEBSITE_REDIRECTS} redirects: {url}"
                 )
-
-            chunks = []
-            total_bytes = 0
-            for chunk in response.iter_content(chunk_size=64 * 1024):
-                if not chunk:
-                    continue
-                total_bytes += len(chunk)
-                if total_bytes > MAX_WEBSITE_RESPONSE_BYTES:
-                    raise ValueError("Website response is too large to process.")
-                chunks.append(chunk)
-
-            html = b"".join(chunks).decode(
-                response.encoding or "utf-8", errors="replace"
-            )
-            text = html2text.html2text(html) if "text/html" in content_type else html
-            documents.append(Document(text=text, metadata={"source": current_url}))
-            break
-        else:
-            raise ValueError(
-                f"Website exceeded {MAX_WEBSITE_REDIRECTS} redirects: {url}"
-            )
 
     return documents
 
@@ -226,8 +226,13 @@ def validate_uploaded_files(uploaded_files: list) -> None:
         raise ValueError(f"At most {MAX_UPLOAD_FILES} files can be uploaded at once.")
 
     total_size = 0
+    destination_names = set()
     for uploaded_file in uploaded_files:
-        safe_uploaded_filename(uploaded_file.name)
+        safe_name = safe_uploaded_filename(uploaded_file.name)
+        destination_name = safe_name.casefold()
+        if destination_name in destination_names:
+            raise ValueError(f"Uploaded filenames collide: {safe_name}. Rename one file.")
+        destination_names.add(destination_name)
         size = getattr(uploaded_file, "size", None)
         if size is None:
             size = len(uploaded_file.getbuffer())

@@ -128,16 +128,6 @@ def browser_storage_payload(settings):
     return json.dumps(settings)
 
 
-def option_index(options, selected_value):
-    """Return the selectbox index for a restored value, or a stable fallback."""
-    if not options:
-        return None
-    try:
-        return options.index(selected_value)
-    except ValueError:
-        return 0
-
-
 def should_refresh_models_for_endpoint(state, models_key):
     """Return whether cached Ollama models belong to a different endpoint."""
     endpoint = normalize_ollama_endpoint(state.get("ollama_endpoint"))
