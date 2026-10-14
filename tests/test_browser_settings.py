@@ -8,7 +8,6 @@ from utils.browser_settings import (
     apply_persisted_settings,
     browser_storage_payload,
     deserialize_persisted_settings,
-    option_index,
     persist_settings_to_browser_storage,
     restore_settings_from_browser_storage,
     should_refresh_models_for_endpoint,
@@ -216,13 +215,6 @@ class BrowserSettingsTests(unittest.TestCase):
             persist_settings_to_browser_storage()
 
         storage_component.assert_not_called()
-
-    def test_option_index_returns_persisted_model_position(self):
-        self.assertEqual(option_index(["llama3", "qwen2"], "qwen2"), 1)
-
-    def test_option_index_falls_back_to_first_option(self):
-        self.assertEqual(option_index(["llama3", "qwen2"], "missing"), 0)
-        self.assertIsNone(option_index([], "missing"))
 
     def test_should_refresh_models_for_endpoint_when_lists_missing(self):
         state = {"ollama_endpoint": "http://192.168.4.2:11434"}

@@ -24,14 +24,28 @@ def add_website_from_input():
         return
 
     try:
-        validated_website = func.validate_website_urls([ensure_https(new_website)])[0]
+        candidate_websites = sorted(set(
+            st.session_state["websites"] + [ensure_https(new_website)]
+        ))
+        validated_websites = func.validate_website_urls(candidate_websites)
     except ValueError as err:
         st.session_state["website_input_error"] = str(err)
         return
 
-    st.session_state["websites"].append(validated_website)
-    st.session_state["websites"] = sorted(set(st.session_state["websites"]))
+    st.session_state["websites"] = validated_websites
     st.session_state["new_website"] = ""
+    st.session_state["website_input_error"] = None
+
+
+def remove_website(site):
+    st.session_state["websites"] = [
+        website for website in st.session_state["websites"] if website != site
+    ]
+    st.session_state["website_input_error"] = None
+
+
+def clear_websites():
+    st.session_state["websites"] = []
     st.session_state["website_input_error"] = None
 
 
@@ -65,9 +79,17 @@ def website():
         st.error(st.session_state["website_input_error"])
 
     if st.session_state["websites"] != []:
-        st.markdown(f"<p>Website(s)</p>", unsafe_allow_html=True)
+        st.write("Websites")
         for site in st.session_state["websites"]:
-            st.caption(f"- {site}")
+            site_column, remove_column = st.columns([1, 0.2])
+            with site_column:
+                st.caption(site)
+            with remove_column:
+                st.button(
+                    "Remove", key=f"remove_website_{site}",
+                    on_click=remove_website, args=(site,),
+                )
+        st.button("Clear Websites", on_click=clear_websites)
         st.write("")
 
         process_button = st.button("Process", key="process_website")
@@ -96,12 +118,20 @@ def website():
                         initial_stages=completed_stages,
                         status_state_key="website_ingestion_stages",
                         documents_loaded_stage="Website Content Loaded",
+                        source_identity=("website", tuple(st.session_state["websites"])),
                     )
 
                     # Display errors (if any) or proceed
                     if error is not None:
                         st.exception(error)
                     else:
-                        st.write(
-                            "Site processing completed. Let's chat! 😎"
-                        )  # TODO: This should be a button.
+                        st.rerun()
+        elif (
+            st.session_state.get("active_source")
+            == ("website", tuple(st.session_state["websites"]))
+            and st.session_state.get("query_engine") is not None
+        ):
+            rag.render_pipeline_status(
+                st.empty(), st.session_state["website_ingestion_stages"]
+            )
+            st.write("Site processing completed. Let's chat! 😎")

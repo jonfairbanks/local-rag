@@ -89,6 +89,11 @@ def local_files():
 
         st.session_state["file_list"] = uploaded_files
         current_upload_signature = uploaded_files_signature(uploaded_files)
+        source_identity = ("local_files", current_upload_signature)
+        source_is_active = (
+            st.session_state.get("active_source") == source_identity
+            and st.session_state["query_engine"] is not None
+        )
         needs_processing = should_process_uploads(
             current_upload_signature,
             st.session_state["processed_file_signature"],
@@ -96,6 +101,15 @@ def local_files():
             st.session_state["query_engine"],
             st.session_state.get("failed_file_signature"),
         )
+
+        if (
+            not needs_processing
+            and not source_is_active
+            and current_upload_signature == st.session_state["processed_file_signature"]
+            and current_upload_signature != st.session_state.get("failed_file_signature")
+        ):
+            st.caption("Another source is active for chat.")
+            needs_processing = st.button("Reimport Files", key="reimport_local_files")
 
         status_container = st.empty()
 
@@ -107,7 +121,9 @@ def local_files():
                 try:
                     # Initiate the RAG pipeline only for new file contents or missing index state.
                     error = rag.rag_pipeline(
-                        uploaded_files, status_container=status_container
+                        uploaded_files,
+                        status_container=status_container,
+                        source_identity=source_identity,
                     )
 
                     # Display errors (if any) or proceed
@@ -119,9 +135,10 @@ def local_files():
                         st.session_state["processed_file_signature"] = (
                             current_upload_signature
                         )
+                        source_is_active = True
                 finally:
                     st.session_state["processing_file_signature"] = None
-        elif current_upload_signature != st.session_state.get("failed_file_signature"):
+        elif source_is_active:
             rag.render_pipeline_status(
                 status_container,
                 st.session_state["file_ingestion_stages"],
@@ -133,8 +150,9 @@ def local_files():
                 st.caption("The previous index is still available for chat.")
             if st.button("Retry Import", key="retry_file_import"):
                 st.session_state.pop("failed_file_signature", None)
+                st.session_state["processed_file_signature"] = None
                 st.rerun()
-        elif (st.session_state["query_engine"] is not None
+        elif (source_is_active
               and current_upload_signature == st.session_state["processed_file_signature"]):
             st.write(
                 "Your files are ready. Let's chat! 😎"

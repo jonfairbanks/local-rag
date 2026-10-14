@@ -158,6 +158,9 @@ def set_initial_state():
     if "query_engine" not in st.session_state:
         st.session_state["query_engine"] = None
 
+    if "active_source" not in st.session_state:
+        st.session_state["active_source"] = None
+
     if "chat_mode" not in st.session_state:
         st.session_state["chat_mode"] = "compact"
 

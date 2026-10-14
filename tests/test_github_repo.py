@@ -17,6 +17,7 @@ class GitHubIngestionStatusTests(unittest.TestCase):
                 processed_repo="jonfairbanks/jonfairbanks",
                 ingestion_stages=["Repository Validated", "Index Ready"],
                 query_engine=object(),
+                active_source=("github_repo", "jonfairbanks/jonfairbanks"),
             )
         )
 
@@ -27,6 +28,7 @@ class GitHubIngestionStatusTests(unittest.TestCase):
                 processed_repo="jonfairbanks/jonfairbanks",
                 ingestion_stages=["Repository Validated", "Index Ready"],
                 query_engine=object(),
+                active_source=("github_repo", "jonfairbanks/jonfairbanks"),
             )
         )
 
@@ -37,6 +39,7 @@ class GitHubIngestionStatusTests(unittest.TestCase):
                 processed_repo="jonfairbanks/jonfairbanks",
                 ingestion_stages=["Repository Validated", "Index Ready"],
                 query_engine=object(),
+                active_source=("github_repo", "jonfairbanks/jonfairbanks"),
             )
         )
 
@@ -47,6 +50,7 @@ class GitHubIngestionStatusTests(unittest.TestCase):
                 processed_repo="jonfairbanks/jonfairbanks",
                 ingestion_stages=["Repository Validated", "Index Ready"],
                 query_engine=None,
+                active_source=("github_repo", "jonfairbanks/jonfairbanks"),
             )
         )
 
