@@ -50,7 +50,7 @@ def render_embedding_progress(status_container, completed_stages, completed, tot
         return
 
     progress = 0 if total == 0 else min(completed / total, 1)
-    progress_label = f"Generating Embeddings — {progress:.0%}"
+    progress_label = f"Generating Embeddings: {progress:.0%}"
 
     status_container.empty()
     with status_container.container():
@@ -78,7 +78,7 @@ def render_completed_ingestion_status(status_container, completed_stages):
 
 
 def rag_pipeline(
-    uploaded_files=None, documents=None, data_dir=None, **kwargs
+    uploaded_files=None, documents=None, data_dir=None, source_identity=None, **kwargs
 ):
     """Commit a replacement index only after ingestion and cleanup succeed."""
     status_key = kwargs.get("status_state_key", "file_ingestion_stages")
@@ -95,6 +95,7 @@ def rag_pipeline(
             if documents is None and data_dir is None:
                 raise ValueError("An ingestion source is required.")
             result = _rag_pipeline(documents=documents, data_dir=data_dir, **kwargs)
+        result["active_source"] = source_identity
         st.session_state.update(result)
         completed = True
         return None

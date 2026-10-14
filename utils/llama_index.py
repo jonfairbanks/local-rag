@@ -15,9 +15,6 @@ from utils.helpers import validated_document_paths
 
 from llama_index.core.embeddings import BaseEmbedding
 
-# This is not used but required by llama-index and must be set FIRST
-os.environ["OPENAI_API_KEY"] = "sk-abc123"
-
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
@@ -29,11 +26,11 @@ MAX_INDEX_NODES = 10000
 
 
 class ProgressReportingEmbedding(BaseEmbedding):
-    """Delegate embeddings while reporting exact batch progress."""
+    """Delegate embeddings while reporting progress for the full index build."""
 
     wrapped_model: BaseEmbedding
     progress_callback: object = Field(exclude=True)
-    total_texts: int = Field(default=0)
+    total_texts: int
     completed_texts: int = Field(default=0)
 
     def _get_query_embedding(self, query: str):
@@ -46,7 +43,6 @@ class ProgressReportingEmbedding(BaseEmbedding):
         return self.wrapped_model.get_text_embedding(text)
 
     def get_text_embedding_batch(self, texts, show_progress=False, **kwargs):
-        self.total_texts = len(texts)
         result = []
         batch_size = self.wrapped_model.embed_batch_size
         for start in range(0, len(texts), batch_size):
@@ -241,6 +237,7 @@ def create_index(documents, embed_model, chunk_size, chunk_overlap, progress_cal
                 progress_callback=progress_callback,
                 model_name=embed_model.model_name,
                 embed_batch_size=embed_model.embed_batch_size,
+                total_texts=len(nodes),
             )
 
         index = VectorStoreIndex(

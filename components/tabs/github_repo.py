@@ -11,7 +11,7 @@ GITHUB_DOCUMENTS_LOADED_STAGE = "Repository Files Loaded"
 
 
 def should_show_github_ingestion_status(
-    current_repo, processed_repo, ingestion_stages, query_engine
+    current_repo, processed_repo, ingestion_stages, query_engine, active_source
 ):
     """Return whether saved GitHub ingestion status should be shown on rerun."""
     try:
@@ -23,6 +23,7 @@ def should_show_github_ingestion_status(
         normalized_current_repo == processed_repo
         and len(ingestion_stages) > 0
         and query_engine is not None
+        and active_source == ("github_repo", processed_repo)
     )
 
 
@@ -77,17 +78,19 @@ def github_repo():
                         initial_stages=completed_stages,
                         status_state_key="github_ingestion_stages",
                         documents_loaded_stage=GITHUB_DOCUMENTS_LOADED_STAGE,
+                        source_identity=("github_repo", repo),
                     )
                 if error is not None:
                     st.exception(error)
                 else:
                     st.session_state["processed_github_repo"] = repo
-                    st.write("Your files are ready. Let's chat! 😎") # TODO: This should be a button.
+                    st.rerun()
         elif should_show_github_ingestion_status(
             st.session_state["github_repo"],
             st.session_state["processed_github_repo"],
             st.session_state["github_ingestion_stages"],
             st.session_state["query_engine"],
+            st.session_state.get("active_source"),
         ):
             status_container = st.empty()
             rag.render_pipeline_status(

@@ -2,10 +2,13 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
+from llama_index.core.embeddings import MockEmbedding
+from llama_index.core.schema import TextNode
+
 import components.page_state as page_state
 import components.tabs.settings as settings_tab
 import utils.ollama as ollama
-from utils.llama_index import OllamaEmbedding, ProgressReportingEmbedding
+from utils.llama_index import OllamaEmbedding, ProgressReportingEmbedding, create_index
 
 
 class ModelDiscoveryTests(unittest.TestCase):
@@ -125,7 +128,8 @@ class EmbeddingBatchTests(unittest.TestCase):
     def test_batches_preserve_order_and_report_progress_including_partial_batch(self):
         progress = Mock()
         wrapped = ProgressReportingEmbedding(
-            wrapped_model=self.model, progress_callback=progress, embed_batch_size=2
+            wrapped_model=self.model, progress_callback=progress, embed_batch_size=2,
+            total_texts=5,
         )
         texts = ["a", "bb", "ccc", "dddd", "eeeee"]
 
@@ -159,13 +163,58 @@ class EmbeddingBatchTests(unittest.TestCase):
             RuntimeError("Fixture unavailable"),
         ]
         wrapped = ProgressReportingEmbedding(
-            wrapped_model=self.model, progress_callback=progress, embed_batch_size=2
+            wrapped_model=self.model, progress_callback=progress, embed_batch_size=2,
+            total_texts=3,
         )
 
         with self.assertRaisesRegex(RuntimeError, "Fixture unavailable"):
             wrapped.get_text_embedding_batch(["a", "bb", "ccc"])
 
         progress.assert_called_once_with(2, 3)
+
+
+class IndexProgressTests(unittest.TestCase):
+    def test_progress_uses_full_total_across_index_insert_batches(self):
+        for count in (2047, 2048, 2050):
+            with self.subTest(count=count):
+                nodes = [TextNode(text=f"Chunk {number}") for number in range(count)]
+                progress = Mock()
+                model = MockEmbedding(embed_dim=2, embed_batch_size=1024)
+                with patch("utils.llama_index.run_transformations", return_value=nodes):
+                    index = create_index([], model, 512, 64, progress)
+
+                updates = [args.args for args in progress.call_args_list]
+                self.assertEqual(updates[0], (0, count))
+                self.assertEqual(updates[-1], (count, count))
+                self.assertTrue(all(total == count for _, total in updates))
+                completed = [done for done, _ in updates]
+                self.assertEqual(completed, sorted(set(completed)))
+                self.assertTrue(all(0 <= done <= count for done in completed))
+                self.assertEqual(len(index.index_struct.nodes_dict), count)
+
+    def test_failure_after_first_index_batch_never_reports_completion(self):
+        nodes = [TextNode(text=f"Chunk {number}") for number in range(2050)]
+        progress = Mock()
+        model = MockEmbedding(embed_dim=2, embed_batch_size=1024)
+        calls = 0
+
+        def embed_text(instance, text):
+            nonlocal calls
+            calls += 1
+            if calls == 2049:
+                raise RuntimeError("Fixture unavailable")
+            return [0.5, 0.5]
+
+        with patch("utils.llama_index.run_transformations", return_value=nodes), patch.object(
+            MockEmbedding, "_get_text_embedding", embed_text
+        ):
+            with self.assertRaisesRegex(Exception, "Fixture unavailable"):
+                create_index([], model, 512, 64, progress)
+
+        self.assertEqual(
+            progress.call_args_list,
+            [call(0, 2050), call(1024, 2050), call(2048, 2050)],
+        )
 
 
 if __name__ == "__main__":

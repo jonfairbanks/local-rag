@@ -1,13 +1,9 @@
 import ollama
-import os
 
 import streamlit as st
 
 import utils.logs as logs
 from utils.settings_validation import validate_ollama_endpoint
-
-# This is not used but required by llama-index and must be imported FIRST
-os.environ["OPENAI_API_KEY"] = "sk-abc123"
 
 from llama_index.llms.ollama import Ollama
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
@@ -187,37 +183,6 @@ def create_ollama_llm(model: str, base_url: str, system_prompt: str = None, requ
 
 ###################################
 #
-# Chat (no context)
-#
-###################################
-
-
-def chat(prompt: str):
-    """
-    Initiates a chat with the Ollama language model using the provided parameters.
-
-    Parameters:
-        - prompt (str): The starting prompt for the conversation.
-
-    Yields:
-        - str: Successive chunks of conversation from the Ollama model.
-    """
-
-    try:
-        llm = create_ollama_llm(
-            st.session_state["selected_model"],
-            st.session_state["ollama_endpoint"],
-        )
-        stream = llm.stream_complete(prompt)
-        for chunk in stream:
-            yield chunk.delta
-    except Exception as err:
-        logs.log.error(f"Ollama chat stream error: {err}")
-        return
-
-
-###################################
-#
 # Document Chat (with context)
 #
 ###################################
@@ -253,8 +218,7 @@ def context_chat(prompt: str, query_engine: RetrieverQueryEngine):
     try:
         stream = query_engine.query(prompt)
         for text in stream.response_gen:
-            # print(str(text), end="", flush=True)
             yield str(text)
     except Exception as err:
         logs.log.error(f"Ollama chat stream error: {err}")
-        return
+        raise
