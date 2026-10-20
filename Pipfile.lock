@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7fc3c259f74f412716be45e8d1e620e1786fbba774a29f977fbb1e0af8866132"
+            "sha256": "b4e313e28137501b88742ed708469f3ddc98b0aa30fc83ea259a32a0896e31ba"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -3230,15 +3230,6 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==13.0.1"
-        },
-        "pyexiftool": {
-            "hashes": [
-                "sha256:22a972c1c212d1ad5f61916fded5057333dcc48fb8e42eed12d2ff9665b367ae",
-                "sha256:ac7d7836d2bf373f20aa558528f6b2222c4c0d896ed28c951a3ff8e6cec05a87"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==0.5.6"
         },
         "pygments": {
             "hashes": [

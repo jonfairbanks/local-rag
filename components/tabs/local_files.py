@@ -87,7 +87,6 @@ def local_files():
             st.error(str(err))
             return
 
-        st.session_state["file_list"] = uploaded_files
         current_upload_signature = uploaded_files_signature(uploaded_files)
         source_identity = ("local_files", current_upload_signature)
         source_is_active = (

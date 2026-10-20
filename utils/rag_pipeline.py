@@ -163,8 +163,6 @@ def _rag_pipeline(
         record_completed_stages()
         render_pipeline_status(status_container, completed_stages)
 
-        # resp = llm.complete("Hello!")
-        # print(resp)
     except Exception as err:
         logs.log.error(f"Failed to setup LLM: {str(err)}")
         raise
