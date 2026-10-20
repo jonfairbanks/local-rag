@@ -75,8 +75,12 @@ jobs:
               echo "Develop changed during promotion. Run the workflow again for the new commit." >&2
               exit 1
             }
+            # Only required checks gate promotion. This job also runs on HEAD_SHA.
             checks="$(gh api --paginate "repos/$GH_REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
-              --jq '.check_runs[]' | jq -s 'group_by([.app.id, .name]) | map(max_by(.id))')"
+              --jq '.check_runs[]' | jq -s --argjson required "$required_checks" '
+                map(select(.app.slug == "github-actions" and
+                  (.name as $name | $required | index($name) != null)))
+                | group_by(.name) | map(max_by(.id))')"
             failures="$(jq -r '.[] | select(.status == "completed" and (.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .conclusion == "action_required" or .conclusion == "stale")) | .name' <<< "$checks")"
             if [ -n "$failures" ]; then
               echo "Release checks failed: $failures" >&2
