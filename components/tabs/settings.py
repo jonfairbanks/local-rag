@@ -67,11 +67,6 @@ def settings():
                 value=st.session_state["top_k"],
                 key="top_k",
             )
-            # st.text_area(
-            #     "System Prompt",
-            #     value=st.session_state["system_prompt"],
-            #     key="system_prompt",
-            # )
             st.selectbox(
                 "Chat Mode",
                 (

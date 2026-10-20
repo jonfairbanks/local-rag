@@ -1,7 +1,5 @@
 import streamlit as st
 
-import utils.logs as logs
-
 from utils.ollama import (
     default_embedding_model,
     get_models,
@@ -79,7 +77,6 @@ def set_initial_state():
             st.session_state["ollama_models"] = models
         except Exception:
             st.session_state["ollama_models"] = []
-            pass
         st.session_state["ollama_models_endpoint"] = st.session_state["ollama_endpoint"]
 
     if refresh_embedding:
@@ -88,7 +85,6 @@ def set_initial_state():
             st.session_state["ollama_embedding_models"] = models
         except Exception:
             st.session_state["ollama_embedding_models"] = []
-            pass
         st.session_state["ollama_embedding_models_endpoint"] = st.session_state["ollama_endpoint"]
 
     if "selected_model" not in st.session_state:
@@ -109,9 +105,6 @@ def set_initial_state():
     ################################
     #  Files, Documents & Websites #
     ################################
-
-    if "file_list" not in st.session_state:
-        st.session_state["file_list"] = []
 
     if "processed_file_signature" not in st.session_state:
         st.session_state["processed_file_signature"] = None
@@ -178,9 +171,6 @@ def set_initial_state():
 
     if "top_k" not in st.session_state:
         st.session_state["top_k"] = 3
-
-    if "embedding_model" not in st.session_state:
-        st.session_state["embedding_model"] = None
 
     if "other_embedding_model" not in st.session_state:
         st.session_state["other_embedding_model"] = None

@@ -28,8 +28,6 @@ def should_show_github_ingestion_status(
 
 
 def github_repo():
-    # st.header("Import files from a GitHub repo")
-    # st.caption("Convert a GitHub repo to embeddings for utilization during chat")
     if ingestion_is_configured():
         with st.form("github_repo_form"):
             st.text_input(
