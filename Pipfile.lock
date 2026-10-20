@@ -1109,11 +1109,12 @@
         },
         "gitpython": {
             "hashes": [
-                "sha256:4ccf7d73c10f5c9e76043fbb2675ac5a1b3ff5b41e648f56bcbed5f63792ecaf",
-                "sha256:c493ec57c0ef6b19743798b6a5af859c71814b524e7e6f97baa2f8e658961488"
+                "sha256:1791de66309bc0c7cfca40bf8d2e3de7ca091cbf94e6051be1ad0722c61062af",
+                "sha256:7002251225e10e29d2e1f49e6532613fe5d5d9f0b6f1f02997a52b38fe56899e"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==3.1.57"
+            "version": "==3.1.62"
         },
         "greenlet": {
             "hashes": [
@@ -3249,11 +3250,12 @@
         },
         "pypdf": {
             "hashes": [
-                "sha256:097ad0d829778ec5b615aeaa5c6da4b6cac4992f8fd80b56f98a1a8c006573bb",
-                "sha256:5bd827266a21553b74d910e350131a6227b72f2ab4209bf372814b8195fa11c5"
+                "sha256:7e5d6e730e7dae87d560a2cee218b852f6498c8be61966f3cd02ead971e48d14",
+                "sha256:bbc43aca292369ccc6cbc8a921991ecf2538a3587ab5a116eff06c321d647155"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==6.17.0"
+            "version": "==6.19.0"
         },
         "pysocks": {
             "hashes": [
