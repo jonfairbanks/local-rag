@@ -1,5 +1,4 @@
 import os
-import json
 import ipaddress
 import re
 import socket
@@ -10,7 +9,6 @@ from pathlib import Path
 from zipfile import ZipFile, BadZipFile
 from urllib.parse import urljoin, urlparse
 
-from exiftool import ExifToolHelper
 import html2text
 from llama_index.core import Document
 
@@ -386,31 +384,3 @@ def clone_github_repo(repo: str, save_dir: str):
     except Exception as err:
         logs.log.error(f"Error cloning {repo} GitHub repo: {err}")
         return False
-
-
-###################################
-#
-# Extract File Metadata
-#
-###################################
-
-
-def get_file_metadata(file_path):
-    """
-    Extracts various metadata for the specified file.
-
-    Args:
-        file_path (str): The path to the file.
-
-    Returns:
-        A dictionary containing the extracted metadata.
-
-    Raises:
-        Exception: If there is an error extracting the metadata.
-    """
-    try:
-        with ExifToolHelper() as et:
-            for d in et.get_metadata(file_path):
-                return json.dumps(d, indent=2)
-    except Exception:
-        pass
